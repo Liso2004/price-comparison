@@ -1,4 +1,4 @@
-# testshop
+# Price-Comp
 
 A new Flutter project.
 
