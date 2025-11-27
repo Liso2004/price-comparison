@@ -1,31 +1,7 @@
 import 'package:flutter/material.dart';
 
-class RetailerPlaceholder extends StatefulWidget {
-  const RetailerPlaceholder({Key? key}) : super(key: key);
-
-  @override
-  _RetailerPlaceholderState createState() => _RetailerPlaceholderState();
-}
-
-class _RetailerPlaceholderState extends State<RetailerPlaceholder>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _shimmerController;
-
-  @override
-  void initState() {
-    super.initState();
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _shimmerController.dispose();
-    super.dispose();
-  }
-
+class RetailerPlaceholder extends StatelessWidget {
+  const RetailerPlaceholder({super.key});
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
