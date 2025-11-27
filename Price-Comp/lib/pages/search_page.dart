@@ -32,12 +32,33 @@ class _SearchPageState extends State<SearchPage> {
   double? _filterMinPrice;
   double? _filterMaxPrice;
 
+  String? _selectedQuickSearch;
+
+  /// Controller + state for horizontal quick search scrolling
+  final ScrollController _quickScrollCtrl = ScrollController();
+  bool _showLeftArrow = false;
+  bool _showRightArrow = true;
+
   @override
   void initState() {
     super.initState();
     debugPrint('[SearchPage] started');
+
     _ctrl = TextEditingController(text: widget.initialQuery);
     _ctrl.addListener(() => setState(() {})); 
+
+    // Listen for scroll position changes to show/hide arrow buttons
+    _quickScrollCtrl.addListener(() {
+      final max = _quickScrollCtrl.position.maxScrollExtent;
+      final offset = _quickScrollCtrl.offset;
+
+      setState(() {
+        _showLeftArrow = offset > 10;
+        _showRightArrow = offset < max - 10;
+      });
+    });
+
+    // Auto-run search if the page was opened with a pre-filled query
     if (widget.initialQuery.isNotEmpty) _submitSearch();
   }
 
@@ -46,6 +67,7 @@ class _SearchPageState extends State<SearchPage> {
     debugPrint('[SearchPage] stopped');
     _ctrl.removeListener(() => setState(() {}));
     _ctrl.dispose();
+    _quickScrollCtrl.dispose();
     super.dispose();
   }
 
@@ -56,12 +78,12 @@ class _SearchPageState extends State<SearchPage> {
       _error = null;
       _results = [];
     });
-    
+
     try {
       final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
       List<Product> withPrices = res;
-      
-      // Apply Category Filter
+
+      // Apply category filter
       if (_filterCategory != null && _filterCategory!.isNotEmpty) {
         withPrices = withPrices
             .where((p) => p.category == _filterCategory)
@@ -72,13 +94,9 @@ class _SearchPageState extends State<SearchPage> {
       if (_filterMinPrice != null || _filterMaxPrice != null) {
         withPrices = withPrices.where((p) {
           final price = MockDatabase.getMockPrice(p.id);
-          final minOk = _filterMinPrice == null
-              ? true
-              : price >= _filterMinPrice!;
-          final maxOk = _filterMaxPrice == null
-              ? true
-              : price <= _filterMaxPrice!;
-          return minOk && maxOk;
+          final okMin = _filterMinPrice == null || price >= _filterMinPrice!;
+          final okMax = _filterMaxPrice == null || price <= _filterMaxPrice!;
+          return okMin && okMax;
         }).toList();
       }
       
@@ -87,9 +105,7 @@ class _SearchPageState extends State<SearchPage> {
         _sortResults(); 
       });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      setState(() => _error = e.toString());
     } finally {
       setState(() => _loading = false);
     }
@@ -102,6 +118,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  /// Sorts results based on selected sort type
   void _sortResults() {
     setState(() {
       if (_sort == 'low') {
@@ -270,8 +287,9 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
         ),
+
         body: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -325,7 +343,7 @@ class _SearchPageState extends State<SearchPage> {
                             Text('Error: $_error'),
                             const SizedBox(height: 8),
                             ElevatedButton(
-                              onPressed: () => _submitSearch(),
+                              onPressed: _submitSearch,
                               child: const Text('Retry'),
                             ),
                           ],
