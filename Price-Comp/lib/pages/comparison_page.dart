@@ -7,7 +7,7 @@ import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({super.key, required this.product});
+  const ComparisonPage({required this.product});
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
@@ -86,42 +86,27 @@ class _ComparisonPageState extends State<ComparisonPage>
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 6),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 84,
-                      height: 84,
-                      child: const Icon(Icons.image, size: 64),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.product.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${widget.product.size} • ${widget.product.category}',
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Avg mock price: R ${MockDatabase.getMockPrice(widget.product.id).toStringAsFixed(2)}',
-                            style: const TextStyle(color: Colors.black54),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Material(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(6),
+                    elevation: 2,
+                    child: InkWell(
+                      onTap: () => _loadComparison(),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        child: const Text(
+                          'Refresh',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -144,11 +129,10 @@ class _ComparisonPageState extends State<ComparisonPage>
                       label: Text(name),
                       selected: sel,
                       onSelected: (v) => setState(() {
-                        if (v) {
+                        if (v)
                           selectedRetailers.add(id);
-                        } else {
+                        else
                           selectedRetailers.remove(id);
-                        }
                       }),
                     );
                   }).toList(),
