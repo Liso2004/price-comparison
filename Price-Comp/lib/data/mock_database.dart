@@ -22,7 +22,7 @@ class MockDatabase {
     {
       'id': 'cat1',
       'name': 'Beverages',
-      'imagePath': 'assets/images/beverages.jpg',
+      'imagePath': 'assets/images/beverages.webp',
     },
     {
       'id': 'cat2',
