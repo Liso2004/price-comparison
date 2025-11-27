@@ -26,11 +26,30 @@ class _SearchPageState extends State<SearchPage> {
 
   String? _selectedQuickSearch;
 
+  /// Controller + state for horizontal quick search scrolling
+  final ScrollController _quickScrollCtrl = ScrollController();
+  bool _showLeftArrow = false;
+  bool _showRightArrow = true;
+
   @override
   void initState() {
     super.initState();
     debugPrint('[SearchPage] started');
+
     _ctrl = TextEditingController(text: widget.initialQuery);
+
+    // Listen for scroll position changes to show/hide arrow buttons
+    _quickScrollCtrl.addListener(() {
+      final max = _quickScrollCtrl.position.maxScrollExtent;
+      final offset = _quickScrollCtrl.offset;
+
+      setState(() {
+        _showLeftArrow = offset > 10;
+        _showRightArrow = offset < max - 10;
+      });
+    });
+
+    // Auto-run search if the page was opened with a pre-filled query
     if (widget.initialQuery.isNotEmpty) _submitSearch();
   }
 
@@ -38,42 +57,42 @@ class _SearchPageState extends State<SearchPage> {
   void dispose() {
     debugPrint('[SearchPage] stopped');
     _ctrl.dispose();
+    _quickScrollCtrl.dispose();
     super.dispose();
   }
 
+  /// Performs product search + applies filters
   Future<void> _submitSearch({bool fail = false}) async {
     setState(() {
       _loading = true;
       _error = null;
       _results = [];
     });
+
     try {
       final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
       List<Product> withPrices = res;
+
+      // Apply category filter
       if (_filterCategory != null && _filterCategory!.isNotEmpty) {
         withPrices = withPrices
             .where((p) => p.category == _filterCategory)
             .toList();
       }
+
+      // Apply min/max price filters
       if (_filterMinPrice != null || _filterMaxPrice != null) {
         withPrices = withPrices.where((p) {
           final price = MockDatabase.getMockPrice(p.id);
-          final minOk = _filterMinPrice == null
-              ? true
-              : price >= _filterMinPrice!;
-          final maxOk = _filterMaxPrice == null
-              ? true
-              : price <= _filterMaxPrice!;
-          return minOk && maxOk;
+          final okMin = _filterMinPrice == null || price >= _filterMinPrice!;
+          final okMax = _filterMaxPrice == null || price <= _filterMaxPrice!;
+          return okMin && okMax;
         }).toList();
       }
-      setState(() {
-        _results = withPrices;
-      });
+
+      setState(() => _results = withPrices);
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      setState(() => _error = e.toString());
     } finally {
       setState(() => _loading = false);
     }
@@ -86,6 +105,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  /// Sorts results based on selected sort type
   void _sortResults() {
     setState(() {
       if (_sort == 'low') {
@@ -104,6 +124,7 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
+  /// Opens filter modal bottom sheet
   void _openFilterModal() {
     final minCtrl = TextEditingController(
       text: _filterMinPrice?.toStringAsFixed(2) ?? '',
@@ -126,9 +147,9 @@ class _SearchPageState extends State<SearchPage> {
             bottom: MediaQuery.of(ctx).viewInsets.bottom,
           ),
           child: StatefulBuilder(
-            builder: (ctx2, setStateModal) {
+            builder: (ctx2, setModal) {
               return Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Wrap(
                   children: [
                     Row(
@@ -149,27 +170,29 @@ class _SearchPageState extends State<SearchPage> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
+
+                    // Category dropdown
+                    DropdownButtonFormField<String?>(
                       value: selCat,
                       hint: const Text('Category (optional)'),
-                      items:
-                          [
-                            null,
-                            ...MockDatabase.categories.map((c) => c['name']),
-                          ].map((v) {
-                            if (v == null)
-                              return const DropdownMenuItem<String>(
-                                value: null,
-                                child: Text('Any'),
-                              );
-                            return DropdownMenuItem<String>(
-                              value: v,
-                              child: Text(v),
-                            );
-                          }).toList(),
-                      onChanged: (v) => setStateModal(() => selCat = v),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Any'),
+                        ),
+                        ...MockDatabase.categories.map(
+                          (c) => DropdownMenuItem<String?>(
+                            value: c['name'],
+                            child: Text(c['name']!),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) => setModal(() => selCat = v),
                     ),
+
                     const SizedBox(height: 12),
+
+                    // Min price
                     TextFormField(
                       controller: minCtrl,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -180,6 +203,8 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
+
+                    // Max price
                     TextFormField(
                       controller: maxCtrl,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -190,6 +215,8 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
+
+                    // Buttons row
                     Row(
                       children: [
                         Expanded(
@@ -198,7 +225,7 @@ class _SearchPageState extends State<SearchPage> {
                               selCat = null;
                               minCtrl.clear();
                               maxCtrl.clear();
-                              setStateModal(() {});
+                              setModal(() {});
                             },
                             child: const Text('Clear'),
                           ),
@@ -224,7 +251,6 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
                   ],
                 ),
               );
@@ -235,8 +261,10 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  /// Quick search chip widget 
   Widget _quickChip(String label) {
-    final bool selected = _selectedQuickSearch == label;
+    final selected = _selectedQuickSearch == label;
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -246,11 +274,12 @@ class _SearchPageState extends State<SearchPage> {
         _submitSearch();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        margin: const EdgeInsets.only(right: 8),
+        constraints: const BoxConstraints(minWidth: 96),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF2563EB) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: selected ? Colors.white : const Color(0xFF2563EB),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFF2563EB)),
         ),
         child: Text(
@@ -258,9 +287,28 @@ class _SearchPageState extends State<SearchPage> {
           style: TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
-            color: selected ? Colors.white : const Color(0xFF3D3D3D),
+            fontSize: 15,
+            color: selected ? const Color(0xFF3D3D3D) : Colors.white,
           ),
         ),
+      ),
+    );
+  }
+
+  /// Round arrow button for scrolling the chip list
+  Widget _arrowButton({required IconData icon, required VoidCallback onTap}) {
+    // Keep the same spacing but remove the circular background — just show the arrow icon
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: IconButton(
+        icon: Icon(icon, size: 16, color: Colors.grey),
+        onPressed: onTap,
+        padding: EdgeInsets.zero,
+        splashRadius: 20,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
       ),
     );
   }
@@ -290,26 +338,87 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ],
         ),
+
         body: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Quick Search Bar
+              // QUICK SEARCH TITLE
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Quick search',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // QUICK SEARCH WITH SCROLL ARROWS
               SizedBox(
-                height: 50,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: MockDatabase.quickSearches.length,
-                  itemBuilder: (context, index) {
-                    final item = MockDatabase.quickSearches[index];
-                    return _quickChip(item);
-                  },
+                height: 41,
+                child: Stack(
+                  children: [
+                    // Scrollable chips (leave extra horizontal padding so arrows
+                    // sit on the page background and do not overlap chip text)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28),
+                      child: ListView.separated(
+                        controller: _quickScrollCtrl,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: MockDatabase.quickSearches.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) =>
+                            _quickChip(MockDatabase.quickSearches[index]),
+                      ),
+                    ),
+
+                    // LEFT ARROW
+                    if (_showLeftArrow)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: _arrowButton(
+                          icon: Icons.arrow_back_ios_new,
+                          onTap: () {
+                            _quickScrollCtrl.animateTo(
+                              (_quickScrollCtrl.offset - 140).clamp(
+                                0,
+                                _quickScrollCtrl.position.maxScrollExtent,
+                              ),
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            );
+                          },
+                        ),
+                      ),
+
+                    // RIGHT ARROW
+                    if (_showRightArrow)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _arrowButton(
+                          icon: Icons.arrow_forward_ios,
+                          onTap: () {
+                            _quickScrollCtrl.animateTo(
+                              (_quickScrollCtrl.offset + 140).clamp(
+                                0,
+                                _quickScrollCtrl.position.maxScrollExtent,
+                              ),
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
 
-              // Sort row
+              const SizedBox(height: 20),
+
+              // SORT SECTION
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -321,63 +430,24 @@ class _SearchPageState extends State<SearchPage> {
                     items: const [
                       DropdownMenuItem(
                         value: 'low',
-                        child: Text('Price: Low→High'),
+                        child: Text('Price: Low → High'),
                       ),
                       DropdownMenuItem(
                         value: 'high',
-                        child: Text('Price: High→Low'),
+                        child: Text('Price: High → Low'),
                       ),
                     ],
-                    onChanged: (v) => setState(() {
-                      _sort = v ?? 'none';
+                    onChanged: (v) {
+                      setState(() => _sort = v ?? 'none');
                       _sortResults();
-                    }),
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
 
-              // Active filters chips
-              if (_filterCategory != null ||
-                  _filterMinPrice != null ||
-                  _filterMaxPrice != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      const Chip(label: Text('Filters active')),
-                      if (_filterCategory != null)
-                        Chip(label: Text('Category: $_filterCategory')),
-                      if (_filterMinPrice != null)
-                        Chip(
-                          label: Text(
-                            'Min: R${_filterMinPrice!.toStringAsFixed(2)}',
-                          ),
-                        ),
-                      if (_filterMaxPrice != null)
-                        Chip(
-                          label: Text(
-                            'Max: R${_filterMaxPrice!.toStringAsFixed(2)}',
-                          ),
-                        ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _filterCategory = null;
-                            _filterMinPrice = null;
-                            _filterMaxPrice = null;
-                          });
-                          _submitSearch();
-                        },
-                        child: const Text('Clear'),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
 
-              // Results
+              // RESULTS SECTION
               Expanded(
                 child: _loading
                     ? ListView.builder(
@@ -392,7 +462,7 @@ class _SearchPageState extends State<SearchPage> {
                             Text('Error: $_error'),
                             const SizedBox(height: 8),
                             ElevatedButton(
-                              onPressed: () => _submitSearch(),
+                              onPressed: _submitSearch,
                               child: const Text('Retry'),
                             ),
                           ],
