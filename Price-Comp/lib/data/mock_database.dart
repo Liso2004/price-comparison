@@ -17,17 +17,48 @@ class MockDatabase {
     'Rice 1kg',
   ];
 
+  // ---------------------- UPDATED WITH IMAGES ----------------------
   static List<Map<String, String>> categories = [
-    {'id': 'cat1', 'name': 'Beverages'},
-    {'id': 'cat2', 'name': 'Groceries'},
-    {'id': 'cat3', 'name': 'Household'},
-    {'id': 'cat4', 'name': 'Personal Care'},
-    {'id': 'cat5', 'name': 'Bakery'},
-    {'id': 'cat6', 'name': 'Meat'},
-    {'id': 'cat7', 'name': 'Snacks'},
+    {
+      'id': 'cat1',
+      'name': 'Beverages',
+      'imagePath': 'assets/images/beverages.webp',
+    },
+    {
+      'id': 'cat2',
+      'name': 'Groceries',
+      'imagePath': 'assets/images/groceries.jpg',
+
+    },
+    {
+      'id': 'cat3',
+      'name': 'Household',
+     'imagePath': 'assets/images/household.jpg',
+    },
+    {
+      'id': 'cat4',
+      'name': 'Personal Care',
+      'imagePath': 'assets/images/personal-care.jpg',
+    },
+    {
+      'id': 'cat5',
+      'name': 'Bakery',
+      'imagePath': 'assets/images/bakery.jpg',
+    },
+    {
+      'id': 'cat6',
+      'name': 'Meat',
+      'imagePath': 'assets/images/meat.jpg',
+    },
+    {
+      'id': 'cat7',
+      'name': 'Snacks',
+      'imagePath': 'assets/images/snacks.jpg',
+    },
   ];
 
   static List<Product> products = [
+    // ---------- BEVERAGES ----------
     Product(
       id: 'p1',
       name: 'Full Cream Milk',
@@ -55,6 +86,7 @@ class MockDatabase {
       category: 'Beverages',
     ),
 
+    // ---------- GROCERIES ----------
     Product(
       id: 'p7',
       name: 'Long Grain Rice',
@@ -109,6 +141,7 @@ class MockDatabase {
       category: 'Groceries',
     ),
 
+    // ---------- BAKERY ----------
     Product(id: 'p19', name: 'Large Eggs', size: '12 pack', category: 'Bakery'),
     Product(
       id: 'p20',
@@ -153,6 +186,7 @@ class MockDatabase {
       category: 'Bakery',
     ),
 
+    // ---------- MEAT ----------
     Product(id: 'p31', name: 'Chicken Breast', size: '1kg', category: 'Meat'),
     Product(id: 'p32', name: 'Chicken Thighs', size: '500g', category: 'Meat'),
     Product(id: 'p33', name: 'Whole Chicken', size: '1.5kg', category: 'Meat'),
@@ -170,6 +204,7 @@ class MockDatabase {
       category: 'Meat',
     ),
 
+    // ---------- PERSONAL CARE ----------
     Product(
       id: 'p37',
       name: 'Fluoride Toothpaste',
@@ -207,6 +242,7 @@ class MockDatabase {
       category: 'Personal Care',
     ),
 
+    // ---------- HOUSEHOLD ----------
     Product(
       id: 'p43',
       name: 'Dishwasher Tablets',
@@ -239,6 +275,7 @@ class MockDatabase {
       category: 'Household',
     ),
 
+    // ---------- EXTRA ----------
     Product(id: 'p49', name: 'Coca-Cola 2L', size: '2L', category: 'Beverages'),
     Product(
       id: 'p50',
@@ -303,11 +340,11 @@ class MockDatabase {
       final name = r['name']!;
       final base = getMockPrice(productId);
       double p = (base + (base * (id.hashCode % 7) / 100)).clamp(5.0, 999.0);
-      if (partial && id == 'r3')
+      if (partial && id == 'r3') {
         list.add(
           RetailerPrice(retailerId: id, retailerName: name, price: null),
         );
-      else
+      } else {
         list.add(
           RetailerPrice(
             retailerId: id,
@@ -315,6 +352,7 @@ class MockDatabase {
             price: double.parse(p.toStringAsFixed(2)),
           ),
         );
+      }
     }
     return list;
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ProductPlaceholder extends StatelessWidget {
-  const ProductPlaceholder();
+  const ProductPlaceholder({super.key});
   @override
   Widget build(BuildContext context) {
     return Container(
