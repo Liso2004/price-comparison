@@ -318,4 +318,24 @@ class MockDatabase {
     }
     return list;
   }
+  // Add to your existing MockDatabase class:
+
+static String getRandomRetailer(String productId) {
+  final retailers = ['Checkers', 'Pick n Pay', 'Woolworths', 'Game'];
+  final index = productId.hashCode % retailers.length;
+  return retailers[index];
+}
+
+static List<String> getRetailersForProduct(String productId) {
+  final retailers = ['Checkers', 'Pick n Pay', 'Woolworths', 'Game'];
+  final baseIndex = productId.hashCode % retailers.length;
+  final count = 1 + (productId.hashCode % 3); // 1-3 retailers per product
+  final result = <String>[];
+  
+  for (int i = 0; i < count; i++) {
+    final index = (baseIndex + i) % retailers.length;
+    result.add(retailers[index]);
+  }
+  return result;
+}
 }
