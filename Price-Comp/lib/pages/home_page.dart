@@ -5,6 +5,8 @@ import 'search_page.dart';
 import 'legal_page.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
