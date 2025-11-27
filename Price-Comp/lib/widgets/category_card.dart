@@ -11,7 +11,6 @@ class CategoryCard extends StatelessWidget {
     this.imagePath,
     super.key,
   });
-  const CategoryCard({super.key, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +41,8 @@ class CategoryCard extends StatelessWidget {
             //   left: 8,
             //   child: CircleAvatar(child: Icon(Icons.category)),
             // ),
-            
-            // Title for the categries 
+
+            // Title for the categries
             Positioned(
               bottom: 8,
               left: 12,
