@@ -11,7 +11,6 @@ class CategoryCard extends StatelessWidget {
     this.imagePath,
     super.key,
   });
-  const CategoryCard({super.key, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
