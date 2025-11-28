@@ -4,7 +4,7 @@ import '../models/retailer_price.dart';
 class RetailerCard extends StatelessWidget {
   final RetailerPrice price;
   final bool highlight;
-  const RetailerCard({required this.price, this.highlight = false});
+  const RetailerCard({super.key, required this.price, this.highlight = false});
 
   @override
   Widget build(BuildContext context) {
