@@ -7,7 +7,7 @@ import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({required this.product});
+  const ComparisonPage({super.key, required this.product});
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
@@ -129,10 +129,11 @@ class _ComparisonPageState extends State<ComparisonPage>
                       label: Text(name),
                       selected: sel,
                       onSelected: (v) => setState(() {
-                        if (v)
+                        if (v) {
                           selectedRetailers.add(id);
-                        else
+                        } else {
                           selectedRetailers.remove(id);
+                        }
                       }),
                     );
                   }).toList(),

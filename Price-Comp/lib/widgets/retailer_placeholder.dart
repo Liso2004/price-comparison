@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RetailerPlaceholder extends StatefulWidget {
-  const RetailerPlaceholder({Key? key}) : super(key: key);
+  const RetailerPlaceholder({super.key});
 
   @override
   _RetailerPlaceholderState createState() => _RetailerPlaceholderState();

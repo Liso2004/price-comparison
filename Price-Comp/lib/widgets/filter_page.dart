@@ -12,7 +12,7 @@ class FilterPage extends StatefulWidget {
   // REMOVED: final double? initialMaxPrice;
   final String initialSort;
 
-  const FilterPage({
+  const FilterPage({super.key, 
     this.initialCategory,
     // REMOVED: this.initialMinPrice,
     // REMOVED: this.initialMaxPrice,

@@ -13,7 +13,7 @@ const Color _lightTextColor = Color(0xFFFFFFFF);
 
 class SearchPage extends StatefulWidget {
   final String initialQuery;
-  const SearchPage({this.initialQuery = ''});
+  const SearchPage({super.key, this.initialQuery = ''});
 
   @override
   _SearchPageState createState() => _SearchPageState();
