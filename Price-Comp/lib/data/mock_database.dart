@@ -303,11 +303,11 @@ class MockDatabase {
       final name = r['name']!;
       final base = getMockPrice(productId);
       double p = (base + (base * (id.hashCode % 7) / 100)).clamp(5.0, 999.0);
-      if (partial && id == 'r3')
+      if (partial && id == 'r3') {
         list.add(
           RetailerPrice(retailerId: id, retailerName: name, price: null),
         );
-      else
+      } else {
         list.add(
           RetailerPrice(
             retailerId: id,
@@ -315,6 +315,7 @@ class MockDatabase {
             price: double.parse(p.toStringAsFixed(2)),
           ),
         );
+      }
     }
     return list;
   }

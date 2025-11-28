@@ -7,7 +7,7 @@ import 'comparison_page.dart';
 
 class SearchPage extends StatefulWidget {
   final String initialQuery;
-  const SearchPage({this.initialQuery = ''});
+  const SearchPage({super.key, this.initialQuery = ''});
 
   @override
   _SearchPageState createState() => _SearchPageState();
@@ -147,18 +147,19 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selCat,
+                      initialValue: selCat,
                       hint: const Text('Category (optional)'),
                       items:
                           [
                             null,
                             ...MockDatabase.categories.map((c) => c['name']),
                           ].map((v) {
-                            if (v == null)
+                            if (v == null) {
                               return const DropdownMenuItem<String>(
                                 value: null,
                                 child: Text('Any'),
                               );
+                            }
                             return DropdownMenuItem<String>(
                               value: v,
                               child: Text(v),
