@@ -188,6 +188,66 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  // ----------- Quick Search Methods ----------
+  Widget _quickChip(String text) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _ctrl.text = text;
+          _selectedQuickSearch = text;
+        });
+        _submitSearch();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: _selectedQuickSearch == text 
+              ? _lightTextColor 
+              : _primaryColor,
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(
+            color: _selectedQuickSearch == text 
+                ? _primaryColor 
+                : _primaryColor,
+          ),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: _selectedQuickSearch == text 
+                ?  _primaryColor // Blue text when selected (white background)
+              : _lightTextColor,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _arrowButton({required IconData icon, required VoidCallback onTap}) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 16, color: _primaryColor),
+        onPressed: onTap,
+        padding: EdgeInsets.zero,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(

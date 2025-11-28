@@ -89,4 +89,10 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
+
+  String _getRetailerName(String productId) {
+    final retailers = ['Checkers', 'Pick n Pay', 'Woolworths', 'Game'];
+    final index = productId.hashCode % retailers.length;
+    return retailers[index];
+  }
 }
