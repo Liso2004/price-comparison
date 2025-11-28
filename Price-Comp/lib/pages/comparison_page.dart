@@ -7,7 +7,7 @@ import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({super.key, required this.product});
+  const ComparisonPage({required this.product});
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
@@ -93,42 +93,27 @@ class _ComparisonPageState extends State<ComparisonPage>
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 6),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 84,
-                      height: 84,
-                      child: const Icon(Icons.image, size: 64),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.product.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${widget.product.size} • ${widget.product.category}',
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Avg mock price: R ${MockDatabase.getMockPrice(widget.product.id).toStringAsFixed(2)}',
-                            style: const TextStyle(color: Colors.black54),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Material(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(6),
+                    elevation: 2,
+                    child: InkWell(
+                      onTap: () => _loadComparison(),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        child: const Text(
+                          'Refresh',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -169,54 +154,56 @@ class _ComparisonPageState extends State<ComparisonPage>
                         itemBuilder: (_, __) => const RetailerPlaceholder(),
                       )
                     : _error != null
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  size: 64,
-                                  color: Color(0xFF3D3D3D),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Error: $_error',
-                                  style: const TextStyle(
-                                    color: Color(0xFF3D3D3D),
-                                    fontSize: 16,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: () => _loadComparison(),
-                                  child: const Text('Retry'),
-                                ),
-                              ],
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Color(0xFF3D3D3D),
                             ),
-                          )
-                        : filteredPrices.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.separated(
-                                itemCount: filteredPrices.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 8),
-                                itemBuilder: (context, idx) {
-                                  // Sort list so best price is first
-                                  final sortedList = List<RetailerPrice>.from(filteredPrices);
-                                  sortedList.sort((a, b) {
-                                    if (a.price == null) return 1;
-                                    if (b.price == null) return -1;
-                                    return a.price!.compareTo(b.price!);
-                                  });
-
-                                  final item = sortedList[idx];
-                                  final isBest = item.price != null &&
-                                      best != null &&
-                                      (item.price! - best).abs() < 0.001;
-                                  return _buildRetailerCard(item, isBest);
-                                },
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error: $_error',
+                              style: const TextStyle(
+                                color: Color(0xFF3D3D3D),
+                                fontSize: 16,
                               ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => _loadComparison(),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : filteredPrices.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        itemCount: filteredPrices.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, idx) {
+                          // Sort list so best price is first
+                          final sortedList = List<RetailerPrice>.from(
+                            filteredPrices,
+                          );
+                          sortedList.sort((a, b) {
+                            if (a.price == null) return 1;
+                            if (b.price == null) return -1;
+                            return a.price!.compareTo(b.price!);
+                          });
+
+                          final item = sortedList[idx];
+                          final isBest =
+                              item.price != null &&
+                              best != null &&
+                              (item.price! - best).abs() < 0.001;
+                          return _buildRetailerCard(item, isBest);
+                        },
+                      ),
               ),
             ],
           ),
@@ -232,9 +219,7 @@ class _ComparisonPageState extends State<ComparisonPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
       child: Row(
         children: [
@@ -263,9 +248,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                 const SizedBox(height: 6),
                 Text(
                   '${widget.product.size} • ${widget.product.category}',
-                  style: const TextStyle(
-                    color: Color(0xFF3D3D3D),
-                  ),
+                  style: const TextStyle(color: Color(0xFF3D3D3D)),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -291,9 +274,7 @@ class _ComparisonPageState extends State<ComparisonPage>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              BoxShadow(color: Colors.black12, blurRadius: 6),
-            ],
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
           ),
           child: Row(
             children: [
@@ -379,10 +360,7 @@ class _ComparisonPageState extends State<ComparisonPage>
             const SizedBox(height: 12),
             Text(
               'This product is not available at the selected retailers.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -394,22 +372,10 @@ class _ComparisonPageState extends State<ComparisonPage>
   Widget _buildRetailerCard(RetailerPrice price, bool isBest) {
     // Enhanced retailer mapping with better ID matching
     final Map<String, Map<String, String>> retailerMapping = {
-      'r2': {
-        'logo': 'assets/checkers.png',
-        'name': 'Checkers',
-      },
-      'r3': {
-        'logo': 'assets/woolworths.png',
-        'name': 'Woolworths',
-      },
-      'r1': {
-        'logo': 'assets/picknpay.png',
-        'name': 'Pick n Pay',
-      },
-      'r4': {
-        'logo': 'assets/game.png',
-        'name': 'Game',
-      },
+      'r2': {'logo': 'assets/checkers.png', 'name': 'Checkers'},
+      'r3': {'logo': 'assets/woolworths.png', 'name': 'Woolworths'},
+      'r1': {'logo': 'assets/picknpay.png', 'name': 'Pick n Pay'},
+      'r4': {'logo': 'assets/game.png', 'name': 'Game'},
     };
 
     // Try to get retailer info from mapping
@@ -430,10 +396,7 @@ class _ComparisonPageState extends State<ComparisonPage>
           ),
         ],
         border: isBest
-            ? Border.all(
-                color: const Color(0xFF2563EB),
-                width: 2,
-              )
+            ? Border.all(color: const Color(0xFF2563EB), width: 2)
             : null,
       ),
       child: Row(
