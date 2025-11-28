@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 40,
+              height: 42,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: MockDatabase.quickSearches.length,
