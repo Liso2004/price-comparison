@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ComparePlaceholderPage extends StatefulWidget {
+  const ComparePlaceholderPage({super.key});
+
   @override
   _ComparePlaceholderPageState createState() => _ComparePlaceholderPageState();
 }
