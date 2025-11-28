@@ -1,77 +1,45 @@
 import 'package:flutter/material.dart';
-import '../data/mock_database.dart'; 
-import '../models/product.dart'; 
-import '../widgets/product_card.dart'; 
-import '../widgets/product_placeholder.dart'; 
-import 'comparison_page.dart'; 
-import '../widgets/filter_page.dart'; // Import the new FilterPage
-
-// --- Styling Constants ---
-const Color _primaryColor = Color(0xFF2563EB); 
-const Color _darkTextColor = Color(0xFF3D3D3D); 
-const Color _lightTextColor = Color(0xFFFFFFFF); 
+import '../data/mock_database.dart';
+import '../models/product.dart';
+import '../widgets/product_card.dart';
+import '../widgets/product_placeholder.dart';
+import 'comparison_page.dart';
 
 class SearchPage extends StatefulWidget {
   final String initialQuery;
+
   const SearchPage({this.initialQuery = ''});
 
   @override
-  _SearchPageState createState() => _SearchPageState();
+  State<SearchPage> createState() => _SearchPageState();
 }
 
 class _SearchPageState extends State<SearchPage> {
-  late TextEditingController _ctrl;
+  late final TextEditingController _ctrl;
   List<Product> _results = [];
   bool _loading = false;
   String? _error;
-  
-  // State variables for Filtering and Sorting
+
   String _sort = 'none';
   String? _filterCategory;
-  // Price range variables are kept but will only be set to null by FilterPage
   double? _filterMinPrice;
   double? _filterMaxPrice;
-
-  String? _selectedQuickSearch;
-
-  /// Controller + state for horizontal quick search scrolling
-  final ScrollController _quickScrollCtrl = ScrollController();
-  bool _showLeftArrow = false;
-  bool _showRightArrow = true;
 
   @override
   void initState() {
     super.initState();
-    debugPrint('[SearchPage] started');
-
     _ctrl = TextEditingController(text: widget.initialQuery);
-    _ctrl.addListener(() => setState(() {})); 
-
-    // Listen for scroll position changes to show/hide arrow buttons
-    _quickScrollCtrl.addListener(() {
-      final max = _quickScrollCtrl.position.maxScrollExtent;
-      final offset = _quickScrollCtrl.offset;
-
-      setState(() {
-        _showLeftArrow = offset > 10;
-        _showRightArrow = offset < max - 10;
-      });
-    });
-
-    // Auto-run search if the page was opened with a pre-filled query
-    if (widget.initialQuery.isNotEmpty) _submitSearch();
+    if (widget.initialQuery.isNotEmpty) {
+      _submitSearch();
+    }
   }
 
   @override
   void dispose() {
-    debugPrint('[SearchPage] stopped');
-    _ctrl.removeListener(() => setState(() {}));
     _ctrl.dispose();
-    _quickScrollCtrl.dispose();
     super.dispose();
   }
 
-  // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
     setState(() {
       _loading = true;
@@ -81,29 +49,23 @@ class _SearchPageState extends State<SearchPage> {
 
     try {
       final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
-      List<Product> withPrices = res;
 
-      // Apply category filter
+      var filtered = res;
+
       if (_filterCategory != null && _filterCategory!.isNotEmpty) {
-        withPrices = withPrices
-            .where((p) => p.category == _filterCategory)
-            .toList();
+        filtered = filtered.where((p) => p.category == _filterCategory).toList();
       }
-      
-      // Price Range Filter logic is kept, but since FilterPage always passes null, it's effectively disabled
+
       if (_filterMinPrice != null || _filterMaxPrice != null) {
-        withPrices = withPrices.where((p) {
+        filtered = filtered.where((p) {
           final price = MockDatabase.getMockPrice(p.id);
-          final okMin = _filterMinPrice == null || price >= _filterMinPrice!;
-          final okMax = _filterMaxPrice == null || price <= _filterMaxPrice!;
-          return okMin && okMax;
+          final minOk = _filterMinPrice == null || price >= _filterMinPrice!;
+          final maxOk = _filterMaxPrice == null || price <= _filterMaxPrice!;
+          return minOk && maxOk;
         }).toList();
       }
-      
-      setState(() {
-        _results = withPrices;
-        _sortResults(); 
-      });
+
+      setState(() => _results = filtered);
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -111,55 +73,119 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  void _onProductTap(Product p) {
+  void _onProductTap(Product product) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ComparisonPage(product: p)),
+      MaterialPageRoute(builder: (_) => ComparisonPage(product: product)),
     );
   }
 
-  /// Sorts results based on selected sort type
   void _sortResults() {
     setState(() {
       if (_sort == 'low') {
-        _results.sort(
-          (a, b) => MockDatabase.getMockPrice(
-            a.id,
-          ).compareTo(MockDatabase.getMockPrice(b.id)),
-        );
+        _results.sort((a, b) => MockDatabase.getMockPrice(a.id)
+            .compareTo(MockDatabase.getMockPrice(b.id)));
       } else if (_sort == 'high') {
-        _results.sort(
-          (a, b) => MockDatabase.getMockPrice(
-            b.id,
-          ).compareTo(MockDatabase.getMockPrice(a.id)),
-        );
+        _results.sort((a, b) => MockDatabase.getMockPrice(b.id)
+            .compareTo(MockDatabase.getMockPrice(a.id)));
       }
     });
   }
 
-  // --- Filter Page Navigation (UPDATED) ---
-  void _openFilterModal() async {
-    final results = await Navigator.push<Map<String, dynamic>?>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FilterPage(
-          initialCategory: _filterCategory,
-          // Removed initialMinPrice and initialMaxPrice
-          initialSort: _sort,
+  Widget _buildSortDropdown() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const Text(
+          "Sort:",
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        fullscreenDialog: true, 
-      ),
+        const SizedBox(width: 6),
+        DropdownButton<String>(
+          value: _sort == 'none' ? null : _sort,
+          hint: const Text(
+            "None",
+            style: TextStyle(fontFamily: 'Inter'),
+          ),
+          items: const [
+            DropdownMenuItem(
+              value: "low",
+              child: Text("Price: Low → High",
+                  style: TextStyle(fontFamily: 'Inter')),
+            ),
+            DropdownMenuItem(
+              value: "high",
+              child: Text("Price: High → Low",
+                  style: TextStyle(fontFamily: 'Inter')),
+            ),
+          ],
+          onChanged: (value) {
+            setState(() => _sort = value ?? 'none');
+            _sortResults();
+          },
+        ),
+      ],
     );
+  }
 
-    if (results != null) {
-      setState(() {
-        _filterCategory = results['category'];
-        _filterMinPrice = results['minPrice']; 
-        _filterMaxPrice = results['maxPrice'];
-        _sort = results['sort'];
-      });
-      _submitSearch();
+  Widget _buildGrid() {
+    if (_loading) {
+      return GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 0.95, // <--- UPDATED (wider / less tall)
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: 6,
+        itemBuilder: (_, __) => const ProductPlaceholder(),
+      );
     }
+
+    if (_error != null) {
+      return Center(
+        child: Text(
+          "Error: $_error",
+          style: const TextStyle(fontFamily: 'Inter'),
+        ),
+      );
+    }
+
+    if (_results.isEmpty) {
+      return const Center(
+        child: Text(
+          "No results found",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Inter',
+          ),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,                // <--- 3 CARDS PER ROW
+        childAspectRatio: 0.95,           // <--- WIDER CARDS
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: _results.length,
+      itemBuilder: (context, index) {
+        final product = _results[index];
+        final price = MockDatabase.getMockPrice(product.id);
+        return ProductCard(
+          product: product,
+          price: price,
+          onTap: () => _onProductTap(product),
+        );
+      },
+    );
   }
 
   @override
@@ -167,204 +193,35 @@ class _SearchPageState extends State<SearchPage> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: 80,
           backgroundColor: Colors.white,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          title: Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  // Search Text Field container (Input field)
-                  child: Container(
-                    height: 48, 
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
-                      ]
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 16.0),
-                            child: TextField(
-                              controller: _ctrl,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Groceries',
-                                hintStyle: TextStyle(
-                                  color: _darkTextColor.withOpacity(0.6),
-                                ),
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              style: const TextStyle(
-                                color: _darkTextColor,
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textInputAction: TextInputAction.search,
-                              onSubmitted: (_) => _submitSearch(),
-                            ),
-                          ),
-                        ),
-                        // Clear Button (x)
-                        if (_ctrl.text.isNotEmpty)
-                          InkWell(
-                            onTap: () {
-                              _ctrl.clear(); 
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Icon(
-                                Icons.close, 
-                                color: _darkTextColor.withOpacity(0.8),
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Filter Button (Icon: tune)
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _openFilterModal,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primaryColor,
-                      padding: const EdgeInsets.all(12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: Size.zero,
-                    ),
-                    child: const Icon(
-                      Icons.tune,
-                      color: _lightTextColor,
-                      size: 24,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Search Action Button (Text: Search)
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _submitSearch,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: Size.zero,
-                    ),
-                    child: const Text(
-                      'Search',
-                      style: TextStyle(
-                        color: _lightTextColor,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          elevation: 1,
+          title: TextField(
+            controller: _ctrl,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              hintText: "Search products...",
+            ),
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _submitSearch(),
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.black),
+              onPressed: _submitSearch,
+            ),
+          ],
         ),
-
         body: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _buildSortDropdown(),
               const SizedBox(height: 8),
-              // --- Active Filters Display (UPDATED) ---
-              // Only show active filter chips for Category and Sort
-              if (_filterCategory != null || _sort != 'none')
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      const Chip(label: Text('Filters/Sort active')),
-                      if (_filterCategory != null)
-                        Chip(label: Text('Category: ${_filterCategory!}')),
-                      // Price range chips removed here
-                      if (_sort != 'none')
-                        Chip(
-                          label: Text(
-                            'Sort: ${_sort == 'low' ? 'Low→High' : 'High→Low'}',
-                          ),
-                        ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _filterCategory = null;
-                            _filterMinPrice = null; // Clear all
-                            _filterMaxPrice = null; // Clear all
-                            _sort = 'none'; 
-                          });
-                          _submitSearch();
-                        },
-                        child: const Text('Clear All'),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 6),
-              // --- Results List / Loading / Error ---
-              Expanded(
-                child: _loading
-                    ? ListView.builder(
-                        itemCount: 6,
-                        itemBuilder: (_, __) => const ProductPlaceholder(),
-                      )
-                    : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Error: $_error'),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: _submitSearch,
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _results.isEmpty
-                    ? const Center(child: Text('No results found'))
-                    : ListView.separated(
-                        itemCount: _results.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, idx) {
-                          final p = _results[idx];
-                          final price = MockDatabase.getMockPrice(p.id);
-                          return ProductCard(
-                            product: p,
-                            price: price,
-                            onTap: () => _onProductTap(p),
-                          );
-                        },
-                      ),
-              ),
+              Expanded(child: _buildGrid()),
             ],
           ),
         ),
