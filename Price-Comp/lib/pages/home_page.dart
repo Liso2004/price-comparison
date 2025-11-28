@@ -95,19 +95,68 @@ class _HomePageState extends State<HomePage> {
                       onSubmitted: (_) => _onSearch(),
                       onChanged: (_) => setState(() {}),
                     ),
+
+                    // Clear button
+                    suffixIcon: _searchCtrl.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+                            onPressed: () => setState(() => _searchCtrl.clear()),
+                          ),
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _onSearch,
-                    child: const Row(
-                      children: [
-                        Icon(Icons.search),
-                        SizedBox(width: 6),
-                        Text('Search'),
-                      ],
-                    ),
+
+                  onSubmitted: (_) => _onSearch(),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+
+                const SizedBox(width: 10),
+                ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB), // primary color
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                ],
+                ),
+                onPressed: _onSearch,
+                child: const Text(
+                  'Search',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              ],
+            ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Quick search',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const Icon(Icons.arrow_forward_ios, size: 14),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 42,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: MockDatabase.quickSearches.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final q = MockDatabase.quickSearches[index];
+                  return ActionChip(
+                    label: Text(q),
+                    onPressed: () => _onQuickTap(q),
+                  );
+                },
               ),
 
               const SizedBox(height: 18),
