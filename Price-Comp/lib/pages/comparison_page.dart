@@ -62,10 +62,9 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   double? getBestPrice() {
-    final prices = _prices
-        .where(
-          (p) => p.price != null && selectedRetailers.contains(p.retailerId),
-        )
+    final filteredPrices = _getFilteredPrices();
+    final prices = filteredPrices
+        .where((p) => p.price != null)
         .map((p) => p.price!)
         .toList();
     if (prices.isEmpty) return null;
@@ -73,9 +72,17 @@ class _ComparisonPageState extends State<ComparisonPage>
     return prices.first;
   }
 
+  List<RetailerPrice> _getFilteredPrices() {
+    return _prices
+        .where((p) => selectedRetailers.contains(p.retailerId))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredPrices = _getFilteredPrices();
     final best = getBestPrice();
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -129,10 +136,11 @@ class _ComparisonPageState extends State<ComparisonPage>
                       label: Text(name),
                       selected: sel,
                       onSelected: (v) => setState(() {
-                        if (v)
+                        if (v) {
                           selectedRetailers.add(id);
-                        else
+                        } else {
                           selectedRetailers.remove(id);
+                        }
                       }),
                     );
                   }).toList(),
@@ -146,67 +154,54 @@ class _ComparisonPageState extends State<ComparisonPage>
                         itemBuilder: (_, __) => const RetailerPlaceholder(),
                       )
                     : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: 64,
-                              color: Color(0xFF3D3D3D),
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  size: 64,
+                                  color: Color(0xFF3D3D3D),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error: $_error',
+                                  style: const TextStyle(
+                                    color: Color(0xFF3D3D3D),
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => _loadComparison(),
+                                  child: const Text('Retry'),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Error: $_error',
-                              style: const TextStyle(
-                                color: Color(0xFF3D3D3D),
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _loadComparison(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _prices
-                          .where(
-                            (p) => selectedRetailers.contains(p.retailerId),
                           )
-                          .isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        itemCount: _prices
-                            .where(
-                              (p) => selectedRetailers.contains(p.retailerId),
-                            )
-                            .length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, idx) {
-                          final list = _prices
-                              .where(
-                                (p) => selectedRetailers.contains(p.retailerId),
-                              )
-                              .toList();
-                          
-                          // Sort list so best price is first
-                          list.sort((a, b) {
-                            if (a.price == null) return 1;
-                            if (b.price == null) return -1;
-                            return a.price!.compareTo(b.price!);
-                          });
-                          
-                          final item = list[idx];
-                          final isBest =
-                              item.price != null &&
-                              best != null &&
-                              (item.price! - best).abs() < 0.001;
-                          return RetailerCard(price: item, highlight: isBest);
-                        },
-                      ),
+                        : filteredPrices.isEmpty
+                            ? _buildEmptyState()
+                            : ListView.separated(
+                                itemCount: filteredPrices.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 8),
+                                itemBuilder: (context, idx) {
+                                  // Sort list so best price is first
+                                  final sortedList = List<RetailerPrice>.from(filteredPrices);
+                                  sortedList.sort((a, b) {
+                                    if (a.price == null) return 1;
+                                    if (b.price == null) return -1;
+                                    return a.price!.compareTo(b.price!);
+                                  });
+
+                                  final item = sortedList[idx];
+                                  final isBest = item.price != null &&
+                                      best != null &&
+                                      (item.price! - best).abs() < 0.001;
+                                  return _buildRetailerCard(item, isBest);
+                                },
+                              ),
               ),
             ],
           ),
@@ -377,6 +372,135 @@ class _ComparisonPageState extends State<ComparisonPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRetailerCard(RetailerPrice price, bool isBest) {
+    // Enhanced retailer mapping with better ID matching
+    final Map<String, Map<String, String>> retailerMapping = {
+      'r2': {
+        'logo': 'assets/checkers.png',
+        'name': 'Checkers',
+      },
+      'r3': {
+        'logo': 'assets/woolworths.png',
+        'name': 'Woolworths',
+      },
+      'r1': {
+        'logo': 'assets/picknpay.png',
+        'name': 'Pick n Pay',
+      },
+      'r4': {
+        'logo': 'assets/game.png',
+        'name': 'Game',
+      },
+    };
+
+    // Try to get retailer info from mapping
+    final retailerInfo =
+        retailerMapping[price.retailerId] ?? retailerMapping['r4']!;
+    final String logoAsset = retailerInfo['logo']!;
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isBest ? const Color(0xFFEFF6FF) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: isBest
+            ? Border.all(
+                color: const Color(0xFF2563EB),
+                width: 2,
+              )
+            : null,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(8),
+              image: const DecorationImage(
+                image: AssetImage('assets/product_image.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Retailer and Product Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Retailer Logo
+                Container(
+                  width: 90,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    image: DecorationImage(
+                      image: AssetImage(logoAsset),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 1),
+                // Product Name
+                Text(
+                  widget.product.name,
+                  style: const TextStyle(
+                    color: Color(0xFF3D3D3D),
+                    fontSize: 13,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                // Price
+                Text(
+                  price.price != null
+                      ? 'R${price.price!.toStringAsFixed(2)}'
+                      : 'Price not available',
+                  style: TextStyle(
+                    color: const Color(0xFF2563EB),
+                    fontSize: isBest ? 18 : 16,
+                    fontFamily: 'Inter',
+                    fontWeight: isBest ? FontWeight.w800 : FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Lowest Price Badge
+          if (isBest && price.price != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2563EB),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Lowest',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
