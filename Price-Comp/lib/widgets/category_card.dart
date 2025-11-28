@@ -35,25 +35,15 @@ class CategoryCard extends StatelessWidget {
                 )
               : null,
         ),
-        child: Stack(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
           children: [
             Positioned(
               bottom: 8,
               left: 12,
               child: Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                      blurRadius: 2,
-                    ),
-                  ],
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ],

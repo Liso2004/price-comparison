@@ -8,7 +8,7 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -29,17 +29,16 @@ class _HomePageState extends State<HomePage> {
 
   void _onSearch() {
     final text = _searchCtrl.text.trim();
-    if (text.isEmpty) return;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => SearchPage(initialQuery: text)),
+      MaterialPageRoute(builder: (context) => SearchPage(initialQuery: text)),
     );
   }
 
   void _onQuickTap(String q) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => SearchPage(initialQuery: q)),
+      MaterialPageRoute(builder: (context) => SearchPage(initialQuery: q)),
     );
   }
 
@@ -51,7 +50,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ------------------------ SEARCH BAR ------------------------
             Row(
               children: [
                 Expanded(
@@ -92,9 +90,53 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
 
-            const SizedBox(height: 18),
+        // removed prefix icon
+        suffixIcon: _searchCtrl.text.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.clear, color: Colors.grey),
+                onPressed: () => setState(() => _searchCtrl.clear()),
+              ),
 
-            // ------------------------ QUICK SEARCH ------------------------
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      onSubmitted: (_) => _onSearch(),
+      onChanged: (_) => setState(() {}),
+    ),
+  ),
+
+  const SizedBox(width: 12),
+
+  SizedBox(
+    height: 48,
+    child: ElevatedButton(
+      onPressed: _onSearch,
+      style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB), // primary color
+                  foregroundColor: Colors.white,              // text color
+        minimumSize: const Size(72, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: const Text(
+        'Search',
+        style: TextStyle(
+          color: Colors.white, // button text white 
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  ),
+]
+),
+            const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -106,13 +148,12 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 8),
-
             SizedBox(
               height: 40,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: MockDatabase.quickSearches.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (context, index) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final q = MockDatabase.quickSearches[index];
                   return ActionChip(
@@ -122,7 +163,6 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
-
             const SizedBox(height: 18),
 
             // ------------------------ CATEGORIES ------------------------
@@ -131,15 +171,14 @@ class _HomePageState extends State<HomePage> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-
             Expanded(
               child: GridView.builder(
                 itemCount: MockDatabase.categories.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 3 / 4,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
+                  childAspectRatio: 3 / 1.2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                 ),
                 itemBuilder: (context, idx) {
                   final cat = MockDatabase.categories[idx];
@@ -149,16 +188,13 @@ class _HomePageState extends State<HomePage> {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            SearchPage(initialQuery: cat['name'] ?? ''),
+                        builder: (context) => SearchPage(initialQuery: cat['name']!),
                       ),
                     ),
                   );
                 },
               ),
             ),
-
-            // ------------------------ LEGAL NOTICE ------------------------
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
@@ -168,7 +204,7 @@ class _HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => LegalPage()),
+                      MaterialPageRoute(builder: (context) => LegalPage()),
                     ),
                     child: const Text('Legal'),
                   ),

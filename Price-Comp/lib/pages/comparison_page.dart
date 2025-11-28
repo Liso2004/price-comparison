@@ -7,7 +7,7 @@ import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({required this.product});
+  const ComparisonPage({super.key, required this.product});
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
