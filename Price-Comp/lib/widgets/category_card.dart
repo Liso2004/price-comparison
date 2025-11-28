@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 class CategoryCard extends StatelessWidget {
   final String title;
+  final String? imagePath;   // <-- Added imagePath
   final VoidCallback onTap;
-  final String? imagePath;
 
   const CategoryCard({
-    required this.title,
-    required this.onTap,
-    this.imagePath,
     super.key,
+    required this.title,
+    this.imagePath,          // <-- Added to constructor
+    required this.onTap,
   });
 
   @override
@@ -17,17 +17,19 @@ class CategoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 120, // adjust height if needed
+        height: 120,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 6)
+          ],
           image: imagePath != null
               ? DecorationImage(
                   image: AssetImage(imagePath!),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.3), // optional overlay
+                    Colors.black.withOpacity(0.3),
                     BlendMode.darken,
                   ),
                 )
@@ -35,14 +37,6 @@ class CategoryCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Optional: CircleAvatar if you want to keep it, else remove
-            // Positioned(
-            //   top: 8,
-            //   left: 8,
-            //   child: CircleAvatar(child: Icon(Icons.category)),
-            // ),
-
-            // Title for the categries
             Positioned(
               bottom: 8,
               left: 12,
