@@ -51,40 +51,81 @@ class _HomePageState extends State<HomePage> {
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Search products, e.g. "Milk"',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchCtrl.text.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () =>
-                                  setState(() => _searchCtrl.clear()),
-                            ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
+                child: TextField(
+                  controller: _searchCtrl,
+                  style: const TextStyle(
+                    color: Color(0xFF3D3D3D), // dark text
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: 'Search for products...',
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF9CA3AF), // light grey hint
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                    ),
+
+                    // Rounded white box
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE5E7EB), // light border
+                        width: 1.2,
                       ),
                     ),
-                    onSubmitted: (_) => _onSearch(),
-                    onChanged: (_) => setState(() {}),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE5E7EB),
+                        width: 1.2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF2563EB), // primary blue
+                        width: 1.7,
+                      ),
+                    ),
+
+                    // Clear button
+                    suffixIcon: _searchCtrl.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+                            onPressed: () => setState(() => _searchCtrl.clear()),
+                          ),
                   ),
+
+                  onSubmitted: (_) => _onSearch(),
+                  onChanged: (_) => setState(() {}),
                 ),
+              ),
+
                 const SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: _onSearch,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.search),
-                      SizedBox(width: 6),
-                      Text('Search'),
-                    ],
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB), // primary color
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                onPressed: _onSearch,
+                child: const Text(
+                  'Search',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
               ],
             ),
             const SizedBox(height: 18),
@@ -100,7 +141,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 40,
+              height: 42,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: MockDatabase.quickSearches.length,

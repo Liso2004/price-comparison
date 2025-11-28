@@ -5,7 +5,7 @@ class ProductCard extends StatelessWidget {
   final Product product;
   final double price;
   final VoidCallback onTap;
-  const ProductCard({
+  const ProductCard({super.key, 
     required this.product,
     required this.price,
     required this.onTap,
