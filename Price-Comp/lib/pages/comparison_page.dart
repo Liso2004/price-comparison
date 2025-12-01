@@ -2,41 +2,60 @@ import 'package:flutter/material.dart';
 import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../models/retailer_price.dart';
-import '../widgets/retailer_card.dart';
 import '../widgets/retailer_placeholder.dart';
+import 'package:flutter/services.dart';
+import 'home_page.dart';
+import 'search_page.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({super.key, required this.product});
+  final VoidCallback? onBackToResults;
+
+  const ComparisonPage({
+    super.key,
+    required this.product,
+    this.onBackToResults,
+  });
 
   @override
+  // ignore: library_private_types_in_public_api
   _ComparisonPageState createState() => _ComparisonPageState();
 }
 
-class _ComparisonPageState extends State<ComparisonPage>
-    with SingleTickerProviderStateMixin {
+class _ComparisonPageState extends State<ComparisonPage> {
   List<RetailerPrice> _prices = [];
   bool _loading = true;
   String? _error;
-  Set<String> selectedRetailers = {'r1', 'r2'};
-  late AnimationController _shimmerController;
+  Set<String> selectedRetailers = {'r1', 'r2', 'r3'};
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  int _currentBottomNavIndex = 2;
 
   @override
   void initState() {
     super.initState();
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
     debugPrint('[ComparisonPage] started for ${widget.product.id}');
     _loadComparison();
+
+    // Add scroll listener for performance monitoring
+    _scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
-    _shimmerController.dispose();
+    _searchController.dispose();
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
     debugPrint('[ComparisonPage] stopped for ${widget.product.id}');
     super.dispose();
+  }
+
+  void _scrollListener() {
+    // Performance monitoring - you can add analytics here
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      debugPrint('[Scroll] Reached bottom of comparison list');
+    }
   }
 
   Future<void> _loadComparison({
@@ -48,6 +67,9 @@ class _ComparisonPageState extends State<ComparisonPage>
       _error = null;
     });
     try {
+      // Simulate network delay for realistic loading
+      await Future.delayed(const Duration(milliseconds: 300));
+
       final res = await MockDatabase.getComparison(
         widget.product.id,
         partial: partial,
@@ -62,9 +84,10 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   double? getBestPrice() {
-    final filteredPrices = _getFilteredPrices();
-    final prices = filteredPrices
-        .where((p) => p.price != null)
+    final prices = _prices
+        .where(
+          (p) => p.price != null && selectedRetailers.contains(p.retailerId),
+        )
         .map((p) => p.price!)
         .toList();
     if (prices.isEmpty) return null;
@@ -72,434 +95,747 @@ class _ComparisonPageState extends State<ComparisonPage>
     return prices.first;
   }
 
-  List<RetailerPrice> _getFilteredPrices() {
-    return _prices
-        .where((p) => selectedRetailers.contains(p.retailerId))
-        .toList();
+  Map<String, String> _retailerMap() {
+    final map = <String, String>{};
+    for (final r in MockDatabase.retailers) {
+      map[r['id']!] = r['name']!;
+    }
+    return map;
+  }
+
+  String _retailerName(String id) {
+    final map = _retailerMap();
+    return map[id] ?? id;
+  }
+
+  // CTA Action Handlers
+  void _handleBackToResults() {
+    HapticFeedback.lightImpact();
+    debugPrint('[Navigation] Back to results tapped');
+
+    if (widget.onBackToResults != null) {
+      widget.onBackToResults!();
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  void _handleSearch(String query) {
+    HapticFeedback.lightImpact();
+    debugPrint('[CTA] Search executed: $query');
+
+    if (query.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Searching for: $query'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _handleQuickSearch(String product) {
+    HapticFeedback.lightImpact();
+    debugPrint('[CTA] Quick search: $product');
+
+    _searchController.text = product;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Quick search: $product - Loading results...'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleRetailerToggle(String retailerId) {
+    HapticFeedback.lightImpact();
+    debugPrint('[CTA] Retailer toggled: $retailerId');
+
+    setState(() {
+      if (selectedRetailers.contains(retailerId)) {
+        selectedRetailers.remove(retailerId);
+      } else {
+        selectedRetailers.add(retailerId);
+      }
+    });
+  }
+
+  void _handleProceed() {
+    HapticFeedback.mediumImpact();
+    debugPrint('[CTA] Proceed to purchase tapped');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Redirecting to purchase page...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Simulate navigation delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      debugPrint('[Navigation] Would navigate to purchase flow');
+    });
+  }
+
+  void _handleLoadPartial() {
+    HapticFeedback.lightImpact();
+    debugPrint('[CTA] Load partial data tapped');
+
+    _loadComparison(partial: true);
+  }
+
+  void _handleBottomNavTap(int index) {
+    HapticFeedback.lightImpact();
+
+    if (index == _currentBottomNavIndex) return;
+
+    setState(() {
+      _currentBottomNavIndex = index;
+    });
+
+    switch (index) {
+      case 0: // Home
+        _navigateToHome();
+        break;
+      case 1: // Search
+        _navigateToSearch();
+        break;
+      case 2: // Compare
+        // Already on compare page, just update state
+        debugPrint('[Navigation] Already on Compare page');
+        break;
+      case 3:
+        _navigateToSettings();
+        break;
+    }
+  }
+
+  void _navigateToHome() {
+    debugPrint('[Navigation] Navigating to ACTUAL HomePage');
+    Navigator.popUntil(context, (route) => route.isFirst);
+  }
+
+  void _navigateToSearch() {
+    debugPrint('[Navigation] Navigating to ACTUAL SearchPage');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SearchPage()),
+    );
+  }
+
+  void _navigateToSettings() {
+    debugPrint('[Navigation] Navigating to Settings');
+
+    // Keep placeholder for settings or create actual settings page later
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Settings')),
+          body: const Center(child: Text('Settings Page - Placeholder')),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredPrices = _getFilteredPrices();
     final best = getBestPrice();
 
     return SafeArea(
       child: Scaffold(
+        backgroundColor: const Color(0xFFFFFFFF),
         appBar: AppBar(
-          title: const Text('Compare'),
-          leading: BackButton(onPressed: () => Navigator.pop(context)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          title: const Text(
+            'Compare',
+            style: TextStyle(
+              fontFamily: "Inter",
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              color: Color(0xFF3D3D3D),
+            ),
+          ),
+          leading: InkWell(
+            onTap: _handleBackToResults,
+            child: Row(
+              children: const [
+                SizedBox(width: 8),
+                Icon(Icons.arrow_back, color: Color(0xFF2563EB)),
+                SizedBox(width: 6),
+                Text(
+                  "Back",
+                  style: TextStyle(
+                    fontFamily: "Inter",
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3D3D3D),
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
         body: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              // Logo and Search Section
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Material(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(6),
-                    elevation: 2,
-                    child: InkWell(
-                      onTap: () => _loadComparison(),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                  Container(
+                    height: 40,
+                    alignment: Alignment.centerLeft,
+                    child: const Text(
+                      'LOGO', // Updated to match your mockup
+                      style: TextStyle(
+                        fontFamily: "Inter",
+                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Search Bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      boxShadow: [
+                        BoxShadow(
+                          // ignore: deprecated_member_use
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                        child: const Text(
-                          'Refresh',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: const InputDecoration(
+                              hintText: 'Search for products...',
+                              hintStyle: TextStyle(
+                                fontFamily: "Inter",
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF9CA3AF),
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontFamily: "Inter",
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF3D3D3D),
+                            ),
+                            onSubmitted: _handleSearch,
                           ),
                         ),
+                        Container(
+                          width: 1,
+                          height: 24,
+                          color: const Color(0xFFE5E7EB),
+                        ),
+                        IconButton(
+                          onPressed: () =>
+                              _handleSearch(_searchController.text),
+                          icon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Quick Search Section
+                  const Text(
+                    'Quick Search',
+                    style: TextStyle(
+                      fontFamily: "Inter",
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Color(0xFF3D3D3D),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Quick Search Chips
+                  SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const ClampingScrollPhysics(),
+                      children: [
+                        _quickSearchChip('Milk'),
+                        const SizedBox(width: 8),
+                        _quickSearchChip('Bread'),
+                        const SizedBox(width: 8),
+                        _quickSearchChip('Juice'),
+                        const SizedBox(width: 8),
+                        _quickSearchChip('Apples'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Results Header
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                      ),
+                    ),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text: 'Showing results for ',
+                            style: TextStyle(
+                              fontFamily: "Inter",
+                              fontWeight: FontWeight.w400,
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                          TextSpan(
+                            text: '"${widget.product.name}"',
+                            style: const TextStyle(
+                              fontFamily: "Inter",
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Color(0xFF3D3D3D),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              _loading ? _buildProductPlaceholder() : _buildProductCard(),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Wrap(
-                  spacing: 8,
-                  children: MockDatabase.retailers.map((r) {
-                    final id = r['id']!;
-                    final name = r['name']!;
-                    final sel = selectedRetailers.contains(id);
-                    return FilterChip(
-                      label: Text(name),
-                      selected: sel,
-                      onSelected: (v) => setState(() {
-                        if (v) {
-                          selectedRetailers.add(id);
-                        } else {
-                          selectedRetailers.remove(id);
-                        }
-                      }),
-                    );
-                  }).toList(),
+
+              const SizedBox(height: 16),
+
+              // Product header card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.product.name.isNotEmpty
+                          ? widget.product.name
+                          : 'Unknown Product',
+                      style: const TextStyle(
+                        fontFamily: "Inter",
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: Color(0xFF3D3D3D),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if ((widget.product.size.isNotEmpty) ||
+                        (widget.product.category.isNotEmpty))
+                      Text(
+                        '${widget.product.size}${(widget.product.size.isNotEmpty) && (widget.product.category.isNotEmpty) ? ' • ' : ''}${widget.product.category}'
+                            .replaceAll(RegExp(r'(^\s*•\s*)|(\s*•\s*$)'), ''),
+                        style: const TextStyle(
+                          fontFamily: "Inter",
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF6B7280),
+                          fontSize: 14,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Avg mock price: R ${MockDatabase.getMockPrice(widget.product.id).toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontFamily: "Inter",
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF6B7280),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: Color(0xFFE5E7EB)),
+              const SizedBox(height: 16),
+
+              // Retailer selection row
+              SizedBox(
+                height: 40,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const ClampingScrollPhysics(),
+                  itemCount: MockDatabase.retailers.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final retailer = MockDatabase.retailers[index];
+                    final id = retailer['id']!;
+                    final name = retailer['name']!;
+                    final selected = selectedRetailers.contains(id);
+
+                    return GestureDetector(
+                      onTap: () => _handleRetailerToggle(id),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? const Color(0xFF2563EB)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: selected
+                                ? const Color(0xFF2563EB)
+                                : const Color(0xFFD1D5DB),
+                          ),
+                        ),
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontFamily: "Inter",
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Price comparison section header
+              const Text(
+                'Price Comparison',
+                style: TextStyle(
+                  fontFamily: "Inter",
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Color(0xFF3D3D3D),
+                ),
+              ),
+
               const SizedBox(height: 12),
+
+              // Main list area with smooth scrolling
               Expanded(
                 child: _loading
                     ? ListView.builder(
-                        itemCount: 4,
+                        physics: const ClampingScrollPhysics(),
+                        controller: _scrollController,
+                        itemCount: 3,
                         itemBuilder: (_, __) => const RetailerPlaceholder(),
                       )
                     : _error != null
                     ? Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.red.shade300,
-                              width: 1,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Error: $_error',
+                              style: const TextStyle(
+                                fontFamily: "Inter",
+                                color: Color(0xFF3D3D3D),
+                              ),
                             ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: Colors.red.shade700,
-                                size: 48,
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Something went wrong',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _error!,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.red.shade600),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red.shade700,
-                                ),
-                                onPressed: () => _loadComparison(),
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
+                              onPressed: _loadComparison,
+                              child: const Text('Retry'),
+                            ),
+                          ],
                         ),
                       )
-                    : filteredPrices.isEmpty
-                    ? _buildEmptyState()
+                    : _prices
+                          .where(
+                            (p) => selectedRetailers.contains(p.retailerId),
+                          )
+                          .isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.info_outline,
+                              size: 42,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'No comparison data available',
+                              style: TextStyle(
+                                fontFamily: "Inter",
+                                color: Color(0xFF3D3D3D),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                     : ListView.separated(
-                        itemCount: filteredPrices.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        physics: const ClampingScrollPhysics(),
+                        controller: _scrollController,
+                        itemCount: _prices
+                            .where(
+                              (p) => selectedRetailers.contains(p.retailerId),
+                            )
+                            .length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, idx) {
-                          // Sort list so best price is first
-                          final sortedList = List<RetailerPrice>.from(
-                            filteredPrices,
-                          );
-                          sortedList.sort((a, b) {
-                            if (a.price == null) return 1;
-                            if (b.price == null) return -1;
-                            return a.price!.compareTo(b.price!);
-                          });
-
-                          final item = sortedList[idx];
+                          final list = _prices
+                              .where(
+                                (p) => selectedRetailers.contains(p.retailerId),
+                              )
+                              .toList();
+                          final item = list[idx];
                           final isBest =
                               item.price != null &&
                               best != null &&
                               (item.price! - best).abs() < 0.001;
-                          return _buildRetailerCard(item, isBest);
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isBest
+                                    ? const Color(0xFF16A34A)
+                                    : const Color(0xFFE5E7EB),
+                                width: isBest ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _retailerName(item.retailerId),
+                                        style: const TextStyle(
+                                          fontFamily: "Inter",
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Color(0xFF3D3D3D),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        widget.product.name,
+                                        style: const TextStyle(
+                                          fontFamily: "Inter",
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF6B7280),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  item.price != null
+                                      ? 'R ${item.price!.toStringAsFixed(2)}'
+                                      : '—',
+                                  style: TextStyle(
+                                    fontFamily: "Inter",
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                    color: isBest
+                                        ? const Color(0xFF16A34A)
+                                        : const Color(0xFF111827),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
                         },
                       ),
               ),
+
+              const SizedBox(height: 16),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        backgroundColor: const Color(0xFF2563EB),
+                      ),
+                      onPressed: _handleProceed,
+                      child: const Text(
+                        'Proceed',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Inter",
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 20,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      backgroundColor: const Color(0xFF2563EB),
+                    ),
+                    onPressed: _handleLoadPartial,
+                    child: const Text(
+                      'Load Partial',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: "Inter",
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
+          ),
+        ),
+
+        // Fixed Bottom Navigation Bar
+        bottomNavigationBar: _buildBottomNavigationBar(),
+      ),
+    );
+  }
+
+  Widget _quickSearchChip(String text) {
+    return GestureDetector(
+      onTap: () => _handleQuickSearch(text),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontFamily: "Inter",
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+            color: Color(0xFF6B7280),
           ),
         ),
       ),
     );
   }
 
-  // Product Card (Normal State)
-  Widget _buildProductCard() {
+  // Fixed Bottom Navigation Bar with proper navigation
+  Widget _buildBottomNavigationBar() {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
+      height: 72,
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.image, size: 64, color: Colors.grey),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.product.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${widget.product.size} • ${widget.product.category}',
-                  style: const TextStyle(color: Color(0xFF3D3D3D)),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Avg mock price: R ${MockDatabase.getMockPrice(widget.product.id).toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.black54),
-                ),
-              ],
-            ),
-          ),
+          _buildBottomNavItem(0, Icons.home_outlined, 'Home'),
+          _buildBottomNavItem(1, Icons.search, 'Search'),
+          _buildBottomNavItem(2, Icons.compare_arrows, 'Compare'),
+          _buildBottomNavItem(3, Icons.settings_outlined, 'Settings'),
         ],
       ),
     );
   }
 
-  // Product Placeholder (Loading State with Shimmer)
-  Widget _buildProductPlaceholder() {
-    return AnimatedBuilder(
-      animation: _shimmerController,
-      builder: (context, child) {
-        final shimmerColor = _getShimmerColor();
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 84,
-                height: 84,
-                decoration: BoxDecoration(
-                  color: shimmerColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 16,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: shimmerColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 14,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        color: shimmerColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 14,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: shimmerColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  Widget _buildBottomNavItem(int index, IconData icon, String label) {
+    final isActive = _currentBottomNavIndex == index;
 
-  // Shimmer Color Generator
-  Color _getShimmerColor() {
-    final value = _shimmerController.value;
-    final opacity = (0.3 + (value * 0.2)).clamp(0.0, 1.0);
-    return Colors.grey.withOpacity(opacity);
-  }
-
-  // Empty State
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return GestureDetector(
+      onTap: () => _handleBottomNavTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 70,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.shopping_cart_outlined,
-              size: 80,
-              color: Colors.grey[400],
+              icon,
+              size: 24,
+              color: isActive
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFF9CA3AF),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'No comparison data available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3D3D3D),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             Text(
-              'This product is not available at the selected retailers.',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
+              label,
+              style: TextStyle(
+                fontFamily: "Inter",
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: isActive
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFF9CA3AF),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildRetailerCard(RetailerPrice price, bool isBest) {
-    // Enhanced retailer mapping with better ID matching
-    final Map<String, Map<String, String>> retailerMapping = {
-      'r2': {'logo': 'assets/checkers.png', 'name': 'Checkers'},
-      'r3': {'logo': 'assets/woolworths.png', 'name': 'Woolworths'},
-      'r1': {'logo': 'assets/picknpay.png', 'name': 'Pick n Pay'},
-      'r4': {'logo': 'assets/game.png', 'name': 'Game'},
-    };
-
-    // Try to get retailer info from mapping
-    final retailerInfo =
-        retailerMapping[price.retailerId] ?? retailerMapping['r4']!;
-    final String logoAsset = retailerInfo['logo']!;
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isBest ? const Color(0xFFEFF6FF) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: isBest
-            ? Border.all(color: const Color(0xFF2563EB), width: 2)
-            : null,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: AssetImage('assets/product_image.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Retailer and Product Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Retailer Logo
-                Container(
-                  width: 90,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    image: DecorationImage(
-                      image: AssetImage(logoAsset),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 1),
-                // Product Name
-                Text(
-                  widget.product.name,
-                  style: const TextStyle(
-                    color: Color(0xFF3D3D3D),
-                    fontSize: 13,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                // Price
-                Text(
-                  price.price != null
-                      ? 'R${price.price!.toStringAsFixed(2)}'
-                      : 'Price not available',
-                  style: TextStyle(
-                    color: const Color(0xFF2563EB),
-                    fontSize: isBest ? 18 : 16,
-                    fontFamily: 'Inter',
-                    fontWeight: isBest ? FontWeight.w800 : FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Lowest Price Badge
-          if (isBest && price.price != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'Lowest',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 }
+/// added this so i can see it in git diff
