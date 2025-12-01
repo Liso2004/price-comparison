@@ -4,16 +4,15 @@ import '../models/product.dart';
 import '../models/retailer_price.dart';
 import '../widgets/retailer_placeholder.dart';
 import 'package:flutter/services.dart';
-import 'home_page.dart'; 
-import 'search_page.dart'; 
-
-
+import 'home_page.dart';
+import 'search_page.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
   final VoidCallback? onBackToResults;
-  
-  const ComparisonPage({super.key, 
+
+  const ComparisonPage({
+    super.key,
     required this.product,
     this.onBackToResults,
   });
@@ -30,14 +29,14 @@ class _ComparisonPageState extends State<ComparisonPage> {
   Set<String> selectedRetailers = {'r1', 'r2', 'r3'};
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  int _currentBottomNavIndex = 2; 
+  int _currentBottomNavIndex = 2;
 
   @override
   void initState() {
     super.initState();
     debugPrint('[ComparisonPage] started for ${widget.product.id}');
     _loadComparison();
-    
+
     // Add scroll listener for performance monitoring
     _scrollController.addListener(_scrollListener);
   }
@@ -53,7 +52,8 @@ class _ComparisonPageState extends State<ComparisonPage> {
 
   void _scrollListener() {
     // Performance monitoring - you can add analytics here
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
       debugPrint('[Scroll] Reached bottom of comparison list');
     }
   }
@@ -69,7 +69,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
     try {
       // Simulate network delay for realistic loading
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       final res = await MockDatabase.getComparison(
         widget.product.id,
         partial: partial,
@@ -112,7 +112,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
   void _handleBackToResults() {
     HapticFeedback.lightImpact();
     debugPrint('[Navigation] Back to results tapped');
-    
+
     if (widget.onBackToResults != null) {
       widget.onBackToResults!();
     } else {
@@ -123,7 +123,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
   void _handleSearch(String query) {
     HapticFeedback.lightImpact();
     debugPrint('[CTA] Search executed: $query');
-    
+
     if (query.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -137,7 +137,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
   void _handleQuickSearch(String product) {
     HapticFeedback.lightImpact();
     debugPrint('[CTA] Quick search: $product');
-    
+
     _searchController.text = product;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -150,7 +150,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
   void _handleRetailerToggle(String retailerId) {
     HapticFeedback.lightImpact();
     debugPrint('[CTA] Retailer toggled: $retailerId');
-    
+
     setState(() {
       if (selectedRetailers.contains(retailerId)) {
         selectedRetailers.remove(retailerId);
@@ -163,14 +163,14 @@ class _ComparisonPageState extends State<ComparisonPage> {
   void _handleProceed() {
     HapticFeedback.mediumImpact();
     debugPrint('[CTA] Proceed to purchase tapped');
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Redirecting to purchase page...'),
         duration: Duration(seconds: 2),
       ),
     );
-    
+
     // Simulate navigation delay
     Future.delayed(const Duration(milliseconds: 500), () {
       debugPrint('[Navigation] Would navigate to purchase flow');
@@ -180,17 +180,15 @@ class _ComparisonPageState extends State<ComparisonPage> {
   void _handleLoadPartial() {
     HapticFeedback.lightImpact();
     debugPrint('[CTA] Load partial data tapped');
-    
+
     _loadComparison(partial: true);
   }
 
-
   void _handleBottomNavTap(int index) {
     HapticFeedback.lightImpact();
-    
-    
+
     if (index == _currentBottomNavIndex) return;
-    
+
     setState(() {
       _currentBottomNavIndex = index;
     });
@@ -206,21 +204,20 @@ class _ComparisonPageState extends State<ComparisonPage> {
         // Already on compare page, just update state
         debugPrint('[Navigation] Already on Compare page');
         break;
-      case 3: 
+      case 3:
         _navigateToSettings();
         break;
     }
   }
 
   void _navigateToHome() {
-  debugPrint('[Navigation] Navigating to ACTUAL HomePage');
-  Navigator.popUntil(context, (route) => route.isFirst);
-}
+    debugPrint('[Navigation] Navigating to ACTUAL HomePage');
+    Navigator.popUntil(context, (route) => route.isFirst);
+  }
 
   void _navigateToSearch() {
     debugPrint('[Navigation] Navigating to ACTUAL SearchPage');
-    
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => SearchPage()),
@@ -229,14 +226,16 @@ class _ComparisonPageState extends State<ComparisonPage> {
 
   void _navigateToSettings() {
     debugPrint('[Navigation] Navigating to Settings');
-    
+
     // Keep placeholder for settings or create actual settings page later
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => Scaffold(
-        appBar: AppBar(title: const Text('Settings')),
-        body: const Center(child: Text('Settings Page - Placeholder')),
-      )),
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Settings')),
+          body: const Center(child: Text('Settings Page - Placeholder')),
+        ),
+      ),
     );
   }
 
@@ -303,7 +302,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Search Bar
                   Container(
                     decoration: BoxDecoration(
@@ -332,7 +331,10 @@ class _ComparisonPageState extends State<ComparisonPage> {
                                 color: Color(0xFF9CA3AF),
                               ),
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
                             ),
                             style: const TextStyle(
                               fontFamily: "Inter",
@@ -348,15 +350,19 @@ class _ComparisonPageState extends State<ComparisonPage> {
                           color: const Color(0xFFE5E7EB),
                         ),
                         IconButton(
-                          onPressed: () => _handleSearch(_searchController.text),
-                          icon: const Icon(Icons.search, color: Color(0xFF6B7280)),
+                          onPressed: () =>
+                              _handleSearch(_searchController.text),
+                          icon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF6B7280),
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Quick Search Section
                   const Text(
                     'Quick Search',
@@ -368,7 +374,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Quick Search Chips
                   SizedBox(
                     height: 36,
@@ -387,7 +393,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Results Header
                   Container(
                     width: double.infinity,
@@ -440,7 +446,9 @@ class _ComparisonPageState extends State<ComparisonPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.product.name.isNotEmpty ? widget.product.name : 'Unknown Product',
+                      widget.product.name.isNotEmpty
+                          ? widget.product.name
+                          : 'Unknown Product',
                       style: const TextStyle(
                         fontFamily: "Inter",
                         fontWeight: FontWeight.w600,
@@ -449,7 +457,8 @@ class _ComparisonPageState extends State<ComparisonPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if ((widget.product.size.isNotEmpty) || (widget.product.category.isNotEmpty))
+                    if ((widget.product.size.isNotEmpty) ||
+                        (widget.product.category.isNotEmpty))
                       Text(
                         '${widget.product.size}${(widget.product.size.isNotEmpty) && (widget.product.category.isNotEmpty) ? ' • ' : ''}${widget.product.category}'
                             .replaceAll(RegExp(r'(^\s*•\s*)|(\s*•\s*$)'), ''),
@@ -485,22 +494,30 @@ class _ComparisonPageState extends State<ComparisonPage> {
                   scrollDirection: Axis.horizontal,
                   physics: const ClampingScrollPhysics(),
                   itemCount: MockDatabase.retailers.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 8),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final retailer = MockDatabase.retailers[index];
                     final id = retailer['id']!;
                     final name = retailer['name']!;
                     final selected = selectedRetailers.contains(id);
-                    
+
                     return GestureDetector(
                       onTap: () => _handleRetailerToggle(id),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: selected ? const Color(0xFF2563EB) : Colors.white,
+                          color: selected
+                              ? const Color(0xFF2563EB)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: selected ? const Color(0xFF2563EB) : const Color(0xFFD1D5DB),
+                            color: selected
+                                ? const Color(0xFF2563EB)
+                                : const Color(0xFFD1D5DB),
                           ),
                         ),
                         child: Text(
@@ -509,7 +526,9 @@ class _ComparisonPageState extends State<ComparisonPage> {
                             fontFamily: "Inter",
                             fontWeight: FontWeight.w500,
                             fontSize: 14,
-                            color: selected ? Colors.white : const Color(0xFF6B7280),
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF6B7280),
                           ),
                         ),
                       ),
@@ -543,123 +562,141 @@ class _ComparisonPageState extends State<ComparisonPage> {
                         itemBuilder: (_, __) => const RetailerPlaceholder(),
                       )
                     : _error != null
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Error: $_error',
-                                  style: const TextStyle(
-                                    fontFamily: "Inter",
-                                    color: Color(0xFF3D3D3D),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF2563EB),
-                                  ),
-                                  onPressed: _loadComparison,
-                                  child: const Text('Retry'),
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Error: $_error',
+                              style: const TextStyle(
+                                fontFamily: "Inter",
+                                color: Color(0xFF3D3D3D),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                              ),
+                              onPressed: _loadComparison,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _prices
+                          .where(
+                            (p) => selectedRetailers.contains(p.retailerId),
+                          )
+                          .isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.info_outline,
+                              size: 42,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'No comparison data available',
+                              style: TextStyle(
+                                fontFamily: "Inter",
+                                color: Color(0xFF3D3D3D),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        physics: const ClampingScrollPhysics(),
+                        controller: _scrollController,
+                        itemCount: _prices
+                            .where(
+                              (p) => selectedRetailers.contains(p.retailerId),
+                            )
+                            .length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, idx) {
+                          final list = _prices
+                              .where(
+                                (p) => selectedRetailers.contains(p.retailerId),
+                              )
+                              .toList();
+                          final item = list[idx];
+                          final isBest =
+                              item.price != null &&
+                              best != null &&
+                              (item.price! - best).abs() < 0.001;
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isBest
+                                    ? const Color(0xFF16A34A)
+                                    : const Color(0xFFE5E7EB),
+                                width: isBest ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
-                          )
-                        : _prices
-                                .where((p) => selectedRetailers.contains(p.retailerId))
-                                .isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(Icons.info_outline, size: 42, color: Color(0xFF9CA3AF)),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'No comparison data available',
-                                      style: TextStyle(
-                                        fontFamily: "Inter",
-                                        color: Color(0xFF3D3D3D),
-                                        fontWeight: FontWeight.w500,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _retailerName(item.retailerId),
+                                        style: const TextStyle(
+                                          fontFamily: "Inter",
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Color(0xFF3D3D3D),
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        widget.product.name,
+                                        style: const TextStyle(
+                                          fontFamily: "Inter",
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF6B7280),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              )
-                            : ListView.separated(
-                                physics: const ClampingScrollPhysics(),
-                                controller: _scrollController,
-                                itemCount: _prices
-                                    .where((p) => selectedRetailers.contains(p.retailerId))
-                                    .length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (context, idx) {
-                                  final list = _prices
-                                      .where((p) => selectedRetailers.contains(p.retailerId))
-                                      .toList();
-                                  final item = list[idx];
-                                  final isBest = item.price != null &&
-                                      best != null &&
-                                      (item.price! - best).abs() < 0.001;
-
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: isBest ? const Color(0xFF16A34A) : const Color(0xFFE5E7EB),
-                                        width: isBest ? 2 : 1,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.05),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                _retailerName(item.retailerId),
-                                                style: const TextStyle(
-                                                  fontFamily: "Inter",
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 16,
-                                                  color: Color(0xFF3D3D3D),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                widget.product.name,
-                                                style: const TextStyle(
-                                                  fontFamily: "Inter",
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF6B7280),
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Text(
-                                          item.price != null ? 'R ${item.price!.toStringAsFixed(2)}' : '—',
-                                          style: TextStyle(
-                                            fontFamily: "Inter",
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 18,
-                                            color: isBest ? const Color(0xFF16A34A) : const Color(0xFF111827),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
+                                Text(
+                                  item.price != null
+                                      ? 'R ${item.price!.toStringAsFixed(2)}'
+                                      : '—',
+                                  style: TextStyle(
+                                    fontFamily: "Inter",
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                    color: isBest
+                                        ? const Color(0xFF16A34A)
+                                        : const Color(0xFF111827),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
 
               const SizedBox(height: 16),
@@ -691,7 +728,10 @@ class _ComparisonPageState extends State<ComparisonPage> {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 20,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -748,9 +788,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
       height: 72,
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -766,7 +804,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
 
   Widget _buildBottomNavItem(int index, IconData icon, String label) {
     final isActive = _currentBottomNavIndex == index;
-    
+
     return GestureDetector(
       onTap: () => _handleBottomNavTap(index),
       behavior: HitTestBehavior.opaque,
@@ -778,7 +816,9 @@ class _ComparisonPageState extends State<ComparisonPage> {
             Icon(
               icon,
               size: 24,
-              color: isActive ? const Color(0xFF2563EB) : const Color(0xFF9CA3AF),
+              color: isActive
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFF9CA3AF),
             ),
             const SizedBox(height: 4),
             Text(
@@ -787,7 +827,9 @@ class _ComparisonPageState extends State<ComparisonPage> {
                 fontFamily: "Inter",
                 fontWeight: FontWeight.w500,
                 fontSize: 12,
-                color: isActive ? const Color(0xFF2563EB) : const Color(0xFF9CA3AF),
+                color: isActive
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFF9CA3AF),
               ),
             ),
           ],
@@ -796,3 +838,4 @@ class _ComparisonPageState extends State<ComparisonPage> {
     );
   }
 }
+/// added this so i can see it in git diff
