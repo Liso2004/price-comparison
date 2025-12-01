@@ -3,7 +3,6 @@ import '../data/mock_database.dart';
 import '../models/product.dart'; 
 import '../widgets/product_card.dart'; 
 import '../widgets/product_placeholder.dart';
-import '../app/main_scaffold.dart';
 import 'comparison_page.dart'; 
 import '../widgets/filter_page.dart';
 import '../widgets/recommended_products_horizontal.dart';
