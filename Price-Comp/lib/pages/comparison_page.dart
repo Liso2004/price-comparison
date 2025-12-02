@@ -3,12 +3,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../models/retailer_price.dart';
-import '../widgets/retailer_card.dart';
 import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({required this.product});
+  const ComparisonPage({super.key, required this.product});
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
@@ -63,9 +62,10 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   double? getBestPrice() {
-    final filteredPrices = _getFilteredPrices();
-    final prices = filteredPrices
-        .where((p) => p.price != null)
+    final prices = _prices
+        .where(
+          (p) => p.price != null && selectedRetailers.contains(p.retailerId),
+        )
         .map((p) => p.price!)
         .toList();
     if (prices.isEmpty) return null;
@@ -91,16 +91,21 @@ class _ComparisonPageState extends State<ComparisonPage>
     final website = retailerWebsites[retailerId] ?? 'https://www.google.com';
     final Uri url = Uri.parse(website);
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      // Fallback: Show a snackbar if the URL can't be launched
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not launch $website'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $website';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not launch $website'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -154,12 +159,22 @@ class _ComparisonPageState extends State<ComparisonPage>
                 alignment: Alignment.centerLeft,
                 child: Wrap(
                   spacing: 8,
-                  children: [
-                    _buildFilterChip('r1', 'Pick n Pay'),
-                    _buildFilterChip('r2', 'Checkers'),
-                    _buildFilterChip('r3', 'Woolworths'),
-                    _buildFilterChip('r4', 'Shoprite'),
-                  ],
+                  children: MockDatabase.retailers.map((r) {
+                    final id = r['id']!;
+                    final name = r['name']!;
+                    final sel = selectedRetailers.contains(id);
+                    return FilterChip(
+                      label: Text(name),
+                      selected: sel,
+                      onSelected: (v) => setState(() {
+                        if (v) {
+                          selectedRetailers.add(id);
+                        } else {
+                          selectedRetailers.remove(id);
+                        }
+                      }),
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -228,22 +243,7 @@ class _ComparisonPageState extends State<ComparisonPage>
     );
   }
 
-  Widget _buildFilterChip(String retailerId, String retailerName) {
-    final selected = selectedRetailers.contains(retailerId);
-    return FilterChip(
-      label: Text(retailerName),
-      selected: selected,
-      onSelected: (v) => setState(() {
-        if (v) {
-          selectedRetailers.add(retailerId);
-        } else {
-          selectedRetailers.remove(retailerId);
-        }
-      }),
-    );
-  }
-
-  // Product Card (Normal State) - Updated to match design exactly
+  // Product Card (Normal State)
   Widget _buildProductCard() {
     final bestPrice = getBestPrice();
     final hasBestPrice = bestPrice != null;
@@ -345,7 +345,7 @@ class _ComparisonPageState extends State<ComparisonPage>
 
               const SizedBox(height: 16),
 
-              // Proceed to Buy Button - Now launches retailer website
+              // Proceed to Buy Button - Launches retailer website
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -622,7 +622,7 @@ class _ComparisonPageState extends State<ComparisonPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Retailer Name (Text instead of logo)
+                // Retailer Name
                 Text(
                   retailerName,
                   style: const TextStyle(
