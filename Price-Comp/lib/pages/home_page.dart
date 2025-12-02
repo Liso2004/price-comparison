@@ -5,6 +5,8 @@ import 'search_page.dart';
 import 'legal_page.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -29,6 +31,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onSearch() {
     final text = _searchCtrl.text.trim();
+    if (text.isEmpty) return;
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: text)),
@@ -71,7 +74,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ---------------- SEARCH BAR ----------------
+            // ------------------------ SEARCH BAR ------------------------
             Row(
               children: [
                 Expanded(
@@ -89,9 +92,7 @@ class _HomePageState extends State<HomePage> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
                     onSubmitted: (_) => _onSearch(),
                     onChanged: (_) => setState(() {}),
@@ -113,16 +114,7 @@ class _HomePageState extends State<HomePage> {
 
             const SizedBox(height: 18),
 
-            // ---------------- QUICK SEARCH TITLE ----------------
-            Text(
-              'Quick Search',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-
-            const SizedBox(height: 8),
-
-            //  QUICK SEARCH ----------------
-
+            // ------------------------ QUICK SEARCH ------------------------
             Row(
               children: [
                 Expanded(
@@ -190,29 +182,49 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: MockDatabase.quickSearches.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final q = MockDatabase.quickSearches[index];
+                  return ActionChip(
+                    label: Text(q),
+                    onPressed: () => _onQuickTap(q),
+                  );
+                },
+              ),
+            ),
 
             const SizedBox(height: 18),
 
-            // ---------------- CATEGORIES ----------------
-            Text('Categories', style: Theme.of(context).textTheme.titleMedium),
+            // ------------------------ CATEGORIES ------------------------
+            Text('Product Category', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
+
             Expanded(
               child: GridView.builder(
                 itemCount: MockDatabase.categories.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 3 / 1.2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
+                  childAspectRatio: 3 / 4,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
                 ),
                 itemBuilder: (context, idx) {
                   final cat = MockDatabase.categories[idx];
                   return CategoryCard(
-                    title: cat['name']!,
+                    title: cat['name'] ?? '',
+                    imagePath: cat['imagePath'], 
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SearchPage(initialQuery: cat['name']!),
+                        builder: (_) =>
+                            SearchPage(initialQuery: cat['name'] ?? ''),
                       ),
                     ),
                   );
@@ -220,7 +232,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            // ---------------- FOOTER ----------------
+            // ------------------------ LEGAL NOTICE ------------------------
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(

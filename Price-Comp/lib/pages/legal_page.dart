@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class LegalPage extends StatefulWidget {
+  const LegalPage({super.key});
+
   @override
   _LegalPageState createState() => _LegalPageState();
 }
