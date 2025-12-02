@@ -4,7 +4,10 @@ import '../pages/search_page.dart';
 import '../pages/compare_placeholder_page.dart';
 import '../pages/settings_page.dart';
 
+
 class MainScaffold extends StatefulWidget {
+  const MainScaffold({super.key});
+
   @override
   _MainScaffoldState createState() => _MainScaffoldState();
 }
