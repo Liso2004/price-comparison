@@ -6,7 +6,6 @@ import '../pages/settings_page.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
-
   @override
   _MainScaffoldState createState() => _MainScaffoldState();
 }
@@ -19,7 +18,6 @@ class _MainScaffoldState extends State<MainScaffold> {
     ComparePlaceholderPage(),
     SettingsPage(),
   ];
-
   @override
   void initState() {
     super.initState();
@@ -33,7 +31,6 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   void _onTap(int idx) => setState(() => _currentIndex = idx);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
