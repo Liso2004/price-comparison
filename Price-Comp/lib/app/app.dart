@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'main_scaffold.dart';
+import '../pages/splash_page.dart';
 
 class DeepSeekApp extends StatelessWidget {
-  const DeepSeekApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     final primaryBlue = Colors.blue.shade700;
@@ -31,8 +30,8 @@ class DeepSeekApp extends StatelessWidget {
           bodySmall: TextStyle(color: Colors.black),
         ),
       ),
-      initialRoute: '/',
-      routes: {'/': (_) => MainScaffold()},
+      // Set splash page as home
+      home: SplashPage(),
     );
   }
 }
