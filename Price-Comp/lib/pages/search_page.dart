@@ -555,7 +555,7 @@ class _SearchPageState extends State<SearchPage> {
                                       .min, // Important: use min here
                                   children: [
                                     const Text(
-                                      'No results found',
+                                      'No results found!',
                                       style: TextStyle(
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w600,

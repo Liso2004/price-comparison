@@ -333,7 +333,7 @@ class _ComparisonPageState extends State<ComparisonPage>
               // Price
               Text(
                 hasBestPrice
-                    ? 'R ${bestPrice!.toStringAsFixed(2)}'
+                    ? 'R ${bestPrice.toStringAsFixed(2)}'
                     : 'Price not available',
                 style: TextStyle(
                   color: hasBestPrice ? const Color(0xFF2563EB) : Colors.grey,
