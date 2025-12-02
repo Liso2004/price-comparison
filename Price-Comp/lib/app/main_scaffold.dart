@@ -13,16 +13,23 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
-  final pages = <Widget>[
-    HomePage(),
-    SearchPage(),
-    ComparePlaceholderPage(),
-    SettingsPage(),
-  ];
+  
+  late final List<Widget> pages;
 
   @override
   void initState() {
     super.initState();
+    pages = <Widget>[
+      HomePage(),
+      SearchPage(),
+      ComparePlaceholderPage(
+        onHomePressed: () {
+          debugPrint('[MainScaffold] Home button callback triggered, switching to index 0');
+          setState(() => _currentIndex = 0);
+        },
+      ),
+      SettingsPage(),
+    ];
     debugPrint('[MainScaffold] started');
   }
 
