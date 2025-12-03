@@ -1,0 +1,50 @@
+[
+            {
+        "productName": "Calpol Paediatric Syrup 100 ml",
+        "price": "R79.99",
+        "productImageURL": "https://assets.woolworthsstatic.co.za/Calpol-Paediatric-Syrup-100-ml-6001424000021.jpg?V=0Iyr&o=eyJidWNrZXQiOiJ3dy1vbmxpbmUtaW1hZ2UtcmVzaXplIiwia2V5IjoiaW1hZ2VzL2VsYXN0aWNlcmEvcHJvZHVjdHMvaGVyby8yMDI1LTExLTE4LzYwMDE0MjQwMDAwMjFfaGVyby5qcGcifQ&",
+        "productURL": "https://www.woolworths.co.za/prod/Food/Toiletries-Health/Health-Pharmacy/Medical/Calpol-Paediatric-Syrup-100-ml/_/A-6001424000021?isFromPLP=true",
+        "category": "Health & Wellness",
+		"retailer": "Woolworths"
+    },
+    {
+        "productName": "Energizer MAX AA Alkaline Batteries 12 pk",
+        "price": "R169.99",
+        "productImageURL": "https://assets.woolworthsstatic.co.za/Energizer-MAX-AA-Alkaline-Batteries-12-pk-8888021206289.jpg?V=DJLR&o=eyJidWNrZXQiOiJ3dy1vbmxpbmUtaW1hZ2UtcmVzaXplIiwia2V5IjoiaW1hZ2VzL2VsYXN0aWNlcmEvcHJvZHVjdHMvaGVyby8yMDI1LTA1LTE5Lzg4ODgwMjEyMDYyODlfaGVyby5qcGcifQ&",
+        "productURL": "https://www.woolworths.co.za/prod/Food/Household/Batteries-Chargers/Energizer-MAX-AA-Alkaline-Batteries-12-pk/_/A-8888021206289?isFromPLP=true",
+        "category": "Electronics",
+		"retailer": "Woolworths"
+    },
+    {
+        "productName": "Colgate Triple Action Original Mint Toothpaste 100 ml",
+        "price": "R24.99",
+        "productImageURL": "https://assets.woolworthsstatic.co.za/Colgate-Triple-Action-Original-Mint-Toothpaste-100-ml-6920354814891.jpg?V=b3mg&o=eyJidWNrZXQiOiJ3dy1vbmxpbmUtaW1hZ2UtcmVzaXplIiwia2V5IjoiaW1hZ2VzL2VsYXN0aWNlcmEvcHJvZHVjdHMvaGVyby8yMDI1LTA1LTE5LzY5MjAzNTQ4MTQ4OTFfaGVyby5qcGcifQ&",
+        "productURL": "https://www.woolworths.co.za/prod/Food/Toiletries-Health/Oral-Care/Toothpaste/Colgate-Triple-Action-Original-Mint-Toothpaste-100-ml/_/A-6920354814891?isFromPLP=true",
+        "category": "Personal Care",
+		"retailer": "Woolworths"
+    },
+    {
+        "productName": "Long Life Full Cream Milk 6 x 1 L",
+        "price": "R119.99",
+        "productImageURL": "https://assets.woolworthsstatic.co.za/Long-Life-Full-Cream-Milk-6-x-1-L-6009171091446.jpg?V=fkzQ&o=eyJidWNrZXQiOiJ3dy1vbmxpbmUtaW1hZ2UtcmVzaXplIiwia2V5IjoiaW1hZ2VzL2VsYXN0aWNlcmEvcHJvZHVjdHMvaGVyby8yMDIyLTA4LTI2LzYwMDkxNzEwOTE0NDZfaGVyby5qcGcifQ&",
+        "productURL": "https://www.woolworths.co.za/prod/Food/Pantry/Long-Life-Milk-Dairy-Alternatives/Long-Life-Milk/Full-Cream/Long-Life-Full-Cream-Milk-6-x-1-L/_/A-6009171091446?isFromPLP=true",
+        "category": "Groceries",
+		"retailer": "Woolworths"
+    },
+    {
+        "productName": "Grand-Pa Headache Powders 38 Pcs",
+        "price": "R104.99",
+        "productImageURL": "https://assets.woolworthsstatic.co.za/Grand-Pa-Headache-Powders-38-Pcs-6001076037079.jpg?V=JdTw&o=eyJidWNrZXQiOiJ3dy1vbmxpbmUtaW1hZ2UtcmVzaXplIiwia2V5IjoiaW1hZ2VzL2VsYXN0aWNlcmEvcHJvZHVjdHMvaGVyby8yMDI0LTA4LTIxLzYwMDEwNzYwMzcwNzlfaGVyby5qcGcifQ&",
+        "productURL": "https://www.woolworths.co.za/prod/Food/Toiletries-Health/Health-Pharmacy/Medical/Grand-Pa-Headache-Powders-38-Pcs/_/A-6001076037079?isFromPLP=true",
+        "category": "Health & Wellness",
+		"retailer": "Woolworths"
+    },
+    {
+        "productName": "Sunlight Dishwashing Liquid 750 ml",
+        "price": "R31.99",
+        "productImageURL": "https://assets.woolworthsstatic.co.za/Sunlight-Dishwashing-Liquid-750-ml-6001087403856.jpg?V=@Pjn&o=eyJidWNrZXQiOiJ3dy1vbmxpbmUtaW1hZ2UtcmVzaXplIiwia2V5IjoiaW1hZ2VzL2VsYXN0aWNlcmEvcHJvZHVjdHMvaGVyby8yMDI1LTEwLTA3LzYwMDEwODc0MDM4NTZfaGVyby5qcGcifQ&",
+        "productURL": "https://www.woolworths.co.za/prod/Food/Cleaning/Dishwashing/Dishwashing-Liquids/Sunlight-Dishwashing-Liquid-750-ml/_/A-6001087403856?isFromPLP=true",
+        "category": "Cleaning & Household",
+		"retailer": "Woolworths"
+    }
+]
