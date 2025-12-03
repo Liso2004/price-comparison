@@ -23,7 +23,7 @@ class _LegalPageState extends State<LegalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Legal & Data Disclaimer')),
+      appBar: AppBar(title: const Text('Legal')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -35,27 +35,10 @@ class _LegalPageState extends State<LegalPage> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'This application is a demonstration using mock data only. Prices and availability are simulated for development and testing purposes and do not reflect live retailer data.',
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Data Handling',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'No background or automated data retrieval is performed. Data is retrieved only when you explicitly trigger search or check prices.',
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Contact',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'For more information, refer to the project documentation.',
-              ),
+const Text(
+  '''The information provided by SmartBasket( we , us or our) on our mobile application is for general informational purposes only. All information on our mobile application is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on our mobile application. UNDER NO CIRCUMSTANCE SHALL WE HAVE ANY LIABILITY TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF OUR MOBILE APPLICATION OR RELIANCE ON ANY INFORMATION PROVIDED ON OUR MOBILE APPLICATION. YOUR USE OF OUR MOBILE APPLICATION AND YOUR RELIANCE ON ANY INFORMATION ON OUR MOBILE APPLICATION IS SOLELY AT YOUR OWN RISK.''',
+),
+
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
