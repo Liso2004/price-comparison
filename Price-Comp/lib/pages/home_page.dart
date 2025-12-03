@@ -207,7 +207,7 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Data shown is mock/demo only. '),
+                  const Text(''),
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
