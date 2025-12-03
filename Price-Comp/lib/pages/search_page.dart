@@ -281,6 +281,7 @@ class _SearchPageState extends State<SearchPage> {
                           InkWell(
                             onTap: () {
                               _ctrl.clear();
+                              _submitSearch(); //This will clear results and show "no results" UI
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
