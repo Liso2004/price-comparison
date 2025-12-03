@@ -13,32 +13,21 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
   late final List<Widget> pages;
-  String _searchQuery = ''; // Track search query
-
   @override
   void initState() {
     super.initState();
     pages = <Widget>[
-      HomePage(
-        onCategorySelected: (query) {
-          // When category is selected from HomePage
-          setState(() {
-            _searchQuery = query;
-            _currentIndex = 1; // Switch to SearchPage tab
-          });
-        },
-      ),
-      SearchPage(
-        initialQuery: _searchQuery,
-        key: ValueKey(_searchQuery), // Key helps rebuild when query changes
-      ),
+      HomePage(),
+      SearchPage(),
       ComparePlaceholderPage(
         onHomePressed: () {
-          debugPrint('[MainScaffold] Home button callback triggered');
+          debugPrint(
+            '[MainScaffold] Home button callback triggered, switching to index 0',
+          );
           setState(() => _currentIndex = 0);
         },
       ),
-      const SettingsPage(),
+      SettingsPage(),
     ];
     debugPrint('[MainScaffold] started');
   }
@@ -49,29 +38,11 @@ class _MainScaffoldState extends State<MainScaffold> {
     super.dispose();
   }
 
-  void _onTap(int idx) {
-    if (idx == 1 && _searchQuery.isNotEmpty) {
-      // If switching to SearchPage and we have a query, ensure it's passed
-      setState(() {
-        _currentIndex = idx;
-        // Update the SearchPage widget with current query
-        pages[1] = SearchPage(
-          initialQuery: _searchQuery,
-          key: ValueKey(_searchQuery),
-        );
-      });
-    } else {
-      setState(() => _currentIndex = idx);
-    }
-  }
-
+  void _onTap(int idx) => setState(() => _currentIndex = idx);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onTap,
