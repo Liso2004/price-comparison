@@ -20,6 +20,7 @@ class _ComparisonPageState extends State<ComparisonPage>
   String? _error;
   Set<String> selectedRetailers = {'r1', 'r2'};
   late AnimationController _shimmerController;
+  bool _isInitialLoad = true;
 
   @override
   void initState() {
@@ -42,10 +43,17 @@ class _ComparisonPageState extends State<ComparisonPage>
   Future<void> _loadComparison({
     bool partial = false,
     bool fail = false,
+    bool isRefresh = false,
   }) async {
     setState(() {
       _loading = true;
       _error = null;
+      // On refresh: clear all selections and previous data
+      if (isRefresh) {
+        selectedRetailers.clear();
+        _prices = [];
+        _isInitialLoad = false;
+      }
     });
     try {
       final res = await MockDatabase.getComparison(
@@ -53,7 +61,26 @@ class _ComparisonPageState extends State<ComparisonPage>
         partial: partial,
         fail: fail,
       );
-      setState(() => _prices = res);
+      setState(() {
+        _prices = res;
+        // Only auto-select lowest price retailer on initial load
+        if (_isInitialLoad && res.isNotEmpty) {
+          // Find retailer with lowest price
+          RetailerPrice? lowestPrice;
+          for (final price in res) {
+            if (price.price != null) {
+              if (lowestPrice == null || price.price! < lowestPrice.price!) {
+                lowestPrice = price;
+              }
+            }
+          }
+          // Auto-select the retailer with lowest price
+          if (lowestPrice != null) {
+            selectedRetailers = {lowestPrice.retailerId};
+          }
+          _isInitialLoad = false;
+        }
+      });
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -74,6 +101,10 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   List<RetailerPrice> _getFilteredPrices() {
+    // If no retailers selected, show all retailers
+    if (selectedRetailers.isEmpty) {
+      return _prices;
+    }
     return _prices
         .where((p) => selectedRetailers.contains(p.retailerId))
         .toList();
@@ -142,7 +173,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                     borderRadius: BorderRadius.circular(6),
                     elevation: 2,
                     child: InkWell(
-                      onTap: () => _loadComparison(),
+                      onTap: () => _loadComparison(isRefresh: true),
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -167,25 +198,27 @@ class _ComparisonPageState extends State<ComparisonPage>
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Wrap(
-                  spacing: 8,
-                  children: MockDatabase.retailers.map((r) {
-                    final id = r['id']!;
-                    final name = r['name']!;
-                    final sel = selectedRetailers.contains(id);
-                    return FilterChip(
-                      label: Text(name),
-                      selected: sel,
-                      onSelected: (v) => setState(() {
-                        if (v) {
-                          selectedRetailers.add(id);
-                        } else {
-                          selectedRetailers.remove(id);
-                        }
-                      }),
-                    );
-                  }).toList(),
-                ),
+                child: _loading
+                    ? _buildFilterChipsPlaceholder()
+                    : Wrap(
+                        spacing: 8,
+                        children: MockDatabase.retailers.map((r) {
+                          final id = r['id']!;
+                          final name = r['name']!;
+                          final sel = selectedRetailers.contains(id);
+                          return FilterChip(
+                            label: Text(name),
+                            selected: sel,
+                            onSelected: (v) => setState(() {
+                              if (v) {
+                                selectedRetailers.add(id);
+                              } else {
+                                selectedRetailers.remove(id);
+                              }
+                            }),
+                          );
+                        }).toList(),
+                      ),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -221,7 +254,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                           ],
                         ),
                       )
-                    : filteredPrices.isEmpty
+                    : _prices.isEmpty
                     ? _buildEmptyState()
                     : ListView.separated(
                         itemCount: filteredPrices.length,
@@ -544,6 +577,31 @@ class _ComparisonPageState extends State<ComparisonPage>
     final value = _shimmerController.value;
     final opacity = (0.3 + (value * 0.2)).clamp(0.0, 1.0);
     return Colors.grey.withOpacity(opacity);
+  }
+
+  // Filter Chips Placeholder (Skeleton)
+  Widget _buildFilterChipsPlaceholder() {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        final shimmerColor = _getShimmerColor();
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: List.generate(
+            4,
+            (index) => Container(
+              height: 32,
+              width: 80 + (index * 10.0), // Varying widths
+              decoration: BoxDecoration(
+                color: shimmerColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // Empty State
