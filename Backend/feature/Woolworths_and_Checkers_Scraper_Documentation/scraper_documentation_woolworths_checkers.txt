@@ -1,0 +1,52 @@
+ReadMe instructions
+
+Installing a virtual environment ( Write in a PowerShell terminal ) - python -m venv scrapy-env
+
+Activate virtual environment ( Write in a PowerShell terminal ) - scrapy-env
+
+Installing scrapy and scrapy-playwright ( Write in a PowerShell terminal ) - pip install scrapy scrapy-playwright
+
+Installing playwright browser ( Write in a PowerShell terminal ) - playwright install chromium
+
+
+
+
+Script configuration - Fill this variable in the script with the desired URL links :
+start_urls = [
+	“https://www.checkers.co.za/department/toiletries-1-67075d99ff987811364006cf“,
+]
+
+-   The URL links should correspond with the type of script, for example
+    the category scrapers will only scrape the categories of the
+    specific retailer and the single item scraper will only scrape items
+    from the specific retailer
+
+-   Example URLS
+
+    -   Checkers category scraper :	(https://www.checkers.co.za/department/toiletries-1-67075d99ff987811364006cf)
+
+    -   Woolworths category scraper :
+	( https://www.woolworths.co.za/cat/Food/Toiletries-Health/_/N-1q1wl1r )
+
+    -   Checkers single item scraper
+	( https://www.checkers.co.za/product/colgate-triple-action-original-mint-	toothpaste-2x-100ml-10730853EA )
+
+
+
+
+Running the scripts ( Write in a PowerShell terminal ) - scrapy runspider ( script name ).py -o output.json
+
+Sample output file 
+{  
+“productURL”:“https://www.checkers.co.za/product/staedtler-wood-free-pencil-crayons-24-pack-10514798EA”,
+“productName”: “Staedtler Wood-Free Pencil Crayons 24 Pack”,  “price”:
+“R64.99”,  “productImageURL”:
+“https://catalog.sixty60.co.za/files/672a8445841309d3872cdd74”,
+“category”: “Stationery” 
+},
+
+
+
+
+Notes on known issues :
+¯\_(ツ)_/¯
