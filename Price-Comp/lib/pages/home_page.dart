@@ -179,7 +179,7 @@ class _HomePageState extends State<HomePage> {
                 itemCount: MockDatabase.categories.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 3 / 4,
+                  childAspectRatio: 4 / 3,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                 ),
