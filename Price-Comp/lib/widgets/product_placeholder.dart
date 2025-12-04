@@ -8,7 +8,7 @@ class ProductPlaceholder extends StatelessWidget {
       height: 90,
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
     );

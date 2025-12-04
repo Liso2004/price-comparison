@@ -52,15 +52,15 @@ class _HomePageState extends State<HomePage> {
           children: [
             Row(
   children: [
-Expanded(
-  child: TextField(
-    controller: _searchCtrl,
-    style: const TextStyle(color: Colors.grey),
-    decoration: InputDecoration(
-      hintText: 'Search for any product...',
-      hintStyle: const TextStyle(color: Colors.grey),
-      filled: true,
-      fillColor: Colors.grey.shade100,
+  Expanded(
+    child: TextField(
+      controller: _searchCtrl,
+      style: const TextStyle(color: Colors.grey), // text inside input
+      decoration: InputDecoration(
+        hintText: 'Search for any product...',
+        hintStyle: const TextStyle(color: Colors.grey), // hint text color
+        filled: true,
+        fillColor: Colors.grey.shade100,
 
       // 🔥 Always show clear button when text is not empty
       suffixIcon: _searchCtrl.text.isNotEmpty
@@ -140,7 +140,12 @@ Expanded(
               ),
             ),
             const SizedBox(height: 18),
-            Text('Categories', style: Theme.of(context).textTheme.titleMedium),
+
+            // ------------------------ CATEGORIES ------------------------
+            Text(
+              'Product Category',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: GridView.builder(
@@ -154,7 +159,8 @@ Expanded(
                 itemBuilder: (context, idx) {
                   final cat = MockDatabase.categories[idx];
                   return CategoryCard(
-                    title: cat['name']!,
+                    title: cat['name'] ?? '',
+                    imagePath: cat['imagePath'],
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
