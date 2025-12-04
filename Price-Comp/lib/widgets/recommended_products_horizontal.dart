@@ -32,7 +32,7 @@ class RecommendedProductsHorizontal extends StatelessWidget {
         ),
 
         SizedBox(
-          height: 200,
+          height: 175,
           child: Stack(
             children: [
               // --- Horizontal product list ---
@@ -45,7 +45,7 @@ class RecommendedProductsHorizontal extends StatelessWidget {
                   final price = MockDatabase.getMockPrice(product.id);
 
                   return Container(
-                    width: 155,
+                    width: 130,
                     margin: const EdgeInsets.only(right: 12),
                     child: ProductCard(
                       product: product,
