@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Row(
   children: [
- Expanded(
+Expanded(
   child: TextField(
     controller: _searchCtrl,
     style: const TextStyle(color: Colors.grey),
