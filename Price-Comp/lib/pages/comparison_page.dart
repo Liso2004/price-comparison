@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../models/retailer_price.dart';
-import '../widgets/retailer_card.dart';
 import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
