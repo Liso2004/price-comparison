@@ -28,33 +28,20 @@ class MockDatabase {
       'id': 'cat2',
       'name': 'Groceries',
       'imagePath': 'assets/images/groceries.jpg',
-
     },
     {
       'id': 'cat3',
       'name': 'Household',
-     'imagePath': 'assets/images/household.jpg',
+      'imagePath': 'assets/images/household.jpg',
     },
     {
       'id': 'cat4',
       'name': 'Personal Care',
       'imagePath': 'assets/images/personal-care.jpg',
     },
-    {
-      'id': 'cat5',
-      'name': 'Bakery',
-      'imagePath': 'assets/images/bakery.jpg',
-    },
-    {
-      'id': 'cat6',
-      'name': 'Meat',
-      'imagePath': 'assets/images/meat.jpg',
-    },
-    {
-      'id': 'cat7',
-      'name': 'Snacks',
-      'imagePath': 'assets/images/snacks.jpg',
-    },
+    {'id': 'cat5', 'name': 'Bakery', 'imagePath': 'assets/images/bakery.jpg'},
+    {'id': 'cat6', 'name': 'Meat', 'imagePath': 'assets/images/meat.jpg'},
+    {'id': 'cat7', 'name': 'Snacks', 'imagePath': 'assets/images/snacks.jpg'},
   ];
 
   static List<Product> products = [
@@ -334,15 +321,30 @@ class MockDatabase {
       throw Exception("Network failed to load product comparison");
     }
 
+    // Map of retailer IDs to their base URLs
+    final Map<String, String> retailerBaseUrls = {
+      'r1': 'https://www.pnp.co.za',
+      'r2': 'https://www.checkers.co.za',
+      'r3': 'https://www.woolworths.co.za',
+      'r4': 'https://www.shoprite.co.za',
+    };
+
     List<RetailerPrice> list = [];
     for (var r in retailers) {
       final id = r['id']!;
       final name = r['name']!;
       final base = getMockPrice(productId);
       double p = (base + (base * (id.hashCode % 7) / 100)).clamp(5.0, 999.0);
+      final productUrl = retailerBaseUrls[id] ?? 'https://www.google.com';
+
       if (partial && id == 'r3') {
         list.add(
-          RetailerPrice(retailerId: id, retailerName: name, price: null),
+          RetailerPrice(
+            retailerId: id,
+            retailerName: name,
+            price: null,
+            productUrl: productUrl,
+          ),
         );
       } else {
         list.add(
@@ -350,6 +352,7 @@ class MockDatabase {
             retailerId: id,
             retailerName: name,
             price: double.parse(p.toStringAsFixed(2)),
+            productUrl: productUrl,
           ),
         );
       }

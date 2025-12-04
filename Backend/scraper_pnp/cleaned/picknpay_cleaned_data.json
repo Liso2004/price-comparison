@@ -1,0 +1,100 @@
+{
+  "picknpay": [
+    {
+      "productName": "Clover UHT Full Cream Long Life Milk 6 x 1L",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h4e/hb5/11491489710110/silo-product-image-v2-26Sep2024-180138-6001299015205-Straight_on-251327-185_400Wx400H",
+      "category": "Groceries",
+      "price": "R99.99",
+      "productURL": "https://www.pnp.co.za/All-Products/Beverages/Long-Life-Milk/UHT-Milk/Full-Cream/clover-uht-full-cream-long-life-milk-6-x-1l/p/000000000000538315_CS",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "PnP Large Eggs 30 Pack",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h91/hcb/17495837212702/silo-product-image-v2-02Oct2025-180039-6001007026899-Straight_on-356877-267_515Wx515H",
+      "category": "Groceries",
+      "price": "R77.99",
+      "productURL": "https://www.pnp.co.za/pnp-large-eggs-30-pack/p/000000000000203520_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Sunlight Original Dishwashing Liquid 750ml",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h7e/he5/16121666338846/silo-product-image-v2-10Sep2025-180057-6001087403856-Straight_on-351829-559_515Wx515H",
+      "category": "Cleaning & Household",
+      "price": "R36.99",
+      "productURL": "https://www.pnp.co.za/sunlight-original-dishwashing-liquid-750ml/p/000000000001007088_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Surf Stain Removal Hand Washing Powder Detergent 2kg",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/hec/h6f/11538931613726/silo-product-image-v2-11Dec2024-180055-6001085126719-Straight_on-276657-266_515Wx515H",
+      "category": "Cleaning & Household",
+      "price": "R59.99",
+      "productURL": "https://www.pnp.co.za/surf-stain-removal-hand-washing-powder-detergent-2kg/p/000000000000413041_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Grand-pa Headache Powder Regular Stick Pack 38 Pack",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h8a/he7/13031072923678/silo-product-image-v2-05Jul2025-180029-6001076003593-Straight_on-333780-581_515Wx515H",
+      "category": "Health & Wellness",
+      "price": "R107.99",
+      "productURL": "https://www.pnp.co.za/grand-pa-headache-powder-regular-stick-pack-38-pack/p/000000000000859156_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Calpol Strawberry Flavoured Paediatric Syrup 100ml",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h89/h6f/12213271035934/silo-product-image-v2-27May2025-180051-6001424000021-Straight_on-327552-154_515Wx515H",
+      "category": "Health & Wellness",
+      "price": "R79.99",
+      "productURL": "https://www.pnp.co.za/calpol-strawberry-flavoured-paediatric-syrup-100ml/p/000000000000226338_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Energizer Max AAA 12 Pack",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h48/hbb/12113303404574/silo-product-image-v2-21May2025-180147-8888021206319-Straight_on-324508-335_400Wx400H",
+      "category": "Electronics",
+      "price": "R164.99",
+      "productURL": "https://www.pnp.co.za/energizer-max-aaa-12-pack/p/000000000000793068_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Sandisk Cruzer Glide USB 3.0 Flash Drive 32GB",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/hc4/h05/10936370790430/silo-product-image-v2-31Aug2022-180134-619659115890-Straight_on-53450-1639_515Wx515H",
+      "category": "Electronics",
+      "price": "R99.99",
+      "productURL": "https://www.pnp.co.za/sandisk-cruzer-glide-usb-3.0-flash-drive-32gb/p/000000000000722226_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Staedtler Colour Pencil Woodfree 24 Pack",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h57/h1e/11535740370974/silo-product-image-v2-05Dec2024-180102-4007817021439-Straight_on-274851-866_515Wx515H",
+      "category": "Stationery",
+      "price": "R74.99",
+      "productURL": "https://www.pnp.co.za/staedtler-colour-pencil-woodfree-24-pack/p/000000000000961384_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "A4 Hard Cover Book 96 Pages",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h46/h0b/15926511173662/silo-product-image-v2-06Sep2025-180054-6001007271138-Straight_on-351121-476_515Wx515H",
+      "category": "Stationery",
+      "price": "R17.99",
+      "productURL": "https://www.pnp.co.za/pnp-a4-counter-book-96-pages/p/000000000000554880_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Colgate Triple Action Multibenefit Toothpaste 100ml",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h73/h2d/11123918176286/silo-product-image-v2-16Mar2023-183326-6920354814891-Straight_on-89500-7195_400Wx400H",
+      "category": "Personal Care",
+      "price": "R24.99",
+      "productURL": "https://www.pnp.co.za/colgate-triple-action-multibenefit-toothpaste-100ml/p/000000000000647582_EA",
+      "retailer": "Pick n Pay"
+    },
+    {
+      "productName": "Dettol Antiseptic Liquid 750ml",
+      "productImageURL": "https://cdn-prd-02.pnp.co.za/sys-master/images/h01/h7e/11679098503198/silo-product-image-v2-08Apr2025-180110-6001016400000-Straight_on-308471-154_515Wx515H",
+      "category": "Personal Care",
+      "price": "R114.99",
+      "productURL": "https://www.pnp.co.za/dettol-antiseptic-liquid-750ml/p/000000000000121353_EA",
+      "retailer": "Pick n Pay"
+    }
+  ]
+}
