@@ -52,20 +52,20 @@ class _HomePageState extends State<HomePage> {
           children: [
             Row(
   children: [
-  Expanded(
-    child: TextField(
-      controller: _searchCtrl,
+ Expanded(
+  child: TextField(
+    controller: _searchCtrl,
     style: const TextStyle(color: Colors.grey),
-      decoration: InputDecoration(
-        hintText: 'Search for any product...',
+    decoration: InputDecoration(
+      hintText: 'Search for any product...',
       hintStyle: const TextStyle(color: Colors.grey),
-        filled: true,
-        fillColor: Colors.grey.shade100,
+      filled: true,
+      fillColor: Colors.grey.shade100,
 
       // 🔥 Always show clear button when text is not empty
       suffixIcon: _searchCtrl.text.isNotEmpty
           ? IconButton(
-                icon: const Icon(Icons.clear, color: Colors.grey),
+              icon: const Icon(Icons.clear, color: Colors.grey),
               onPressed: () {
                 _searchCtrl.clear();
                 setState(() {}); // refresh to hide X
@@ -76,15 +76,15 @@ class _HomePageState extends State<HomePage> {
       contentPadding:
           const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
 
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
-      onSubmitted: (_) => _onSearch(),
-      onChanged: (_) => setState(() {}),
     ),
+    onSubmitted: (_) => _onSearch(),
+    onChanged: (_) => setState(() {}),
   ),
+),
 
   const SizedBox(width: 12),
 
