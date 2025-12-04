@@ -11,6 +11,13 @@ class RecommendedProductsHorizontal extends StatelessWidget {
     return MockDatabase.products.take(6).toList();
   }
 
+  /// Get retailer ID for a product (matches ProductCard's display logic)
+  String _getRetailerIdForProduct(String productId) {
+    const retailers = ['r2', 'r1', 'r3', 'r4']; // Checkers, Pick n Pay, Woolworths, Shoprite
+    final index = productId.hashCode % retailers.length;
+    return retailers[index];
+  }
+
   @override
   Widget build(BuildContext context) {
     final recommendedProducts = _getRecommendedProducts();
@@ -43,6 +50,7 @@ class RecommendedProductsHorizontal extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final product = recommendedProducts[index];
                   final price = MockDatabase.getMockPrice(product.id);
+                  final retailerId = _getRetailerIdForProduct(product.id);
 
                   return Container(
                     width: 155,
@@ -50,11 +58,15 @@ class RecommendedProductsHorizontal extends StatelessWidget {
                     child: ProductCard(
                       product: product,
                       price: price,
+                      retailerId: retailerId,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ComparisonPage(product: product),
+                            builder: (_) => ComparisonPage(
+                              product: product,
+                              initialRetailerId: retailerId,
+                            ),
                           ),
                         );
                       },

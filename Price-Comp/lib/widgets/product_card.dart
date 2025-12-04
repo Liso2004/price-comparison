@@ -5,12 +5,14 @@ class ProductCard extends StatelessWidget {
   final Product product;
   final double price;
   final VoidCallback onTap;
+  final String? retailerId; // Optional retailer ID for this product variant
 
   const ProductCard({
     super.key,
     required this.product,
     required this.price,
     required this.onTap,
+    this.retailerId,
   });
 
   @override
@@ -47,7 +49,7 @@ class ProductCard extends StatelessWidget {
 
               // 2. RETAILER - Below picture
               Text(
-                _getRetailerName(product.id),
+                _getRetailerName(),
                 style: const TextStyle(
                   fontSize: 12,
                   fontFamily: 'Inter',
@@ -96,9 +98,21 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  String _getRetailerName(String productId) {
+  String _getRetailerName() {
+    // If retailerId is provided, map it to the retailer name
+    if (retailerId != null) {
+      const retailerMap = {
+        'r1': 'Pick n Pay',
+        'r2': 'Checkers',
+        'r3': 'Woolworths',
+        'r4': 'Shoprite',
+      };
+      return retailerMap[retailerId] ?? 'Unknown Retailer';
+    }
+    
+    // Fallback: derive from product ID (for backward compatibility)
     final retailers = ['Checkers', 'Pick n Pay', 'Woolworths', 'Shoprite'];
-    final index = productId.hashCode % retailers.length;
+    final index = product.id.hashCode % retailers.length;
     return retailers[index];
   }
 }

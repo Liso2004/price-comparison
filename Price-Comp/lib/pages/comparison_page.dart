@@ -7,7 +7,12 @@ import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({super.key, required this.product});
+  final String? initialRetailerId;
+  const ComparisonPage({
+    super.key,
+    required this.product,
+    this.initialRetailerId,
+  });
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
@@ -30,6 +35,10 @@ class _ComparisonPageState extends State<ComparisonPage>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
     debugPrint('[ComparisonPage] started for ${widget.product.id}');
+    // Auto-select the initial retailer if provided
+    if (widget.initialRetailerId != null) {
+      selectedRetailers.add(widget.initialRetailerId!);
+    }
     _loadComparison();
   }
 
@@ -48,9 +57,12 @@ class _ComparisonPageState extends State<ComparisonPage>
     setState(() {
       _loading = true;
       _error = null;
-      // On refresh: clear all selections and previous data
+      // On refresh: reset to initial retailer selection (if any)
       if (isRefresh) {
         selectedRetailers.clear();
+        if (widget.initialRetailerId != null) {
+          selectedRetailers.add(widget.initialRetailerId!);
+        }
         _prices = [];
         _isInitialLoad = false;
       }
