@@ -3,10 +3,10 @@ import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_placeholder.dart';
-import '../app/main_scaffold.dart';
 import 'comparison_page.dart';
 import '../widgets/filter_page.dart';
 import '../widgets/recommended_products_horizontal.dart';
+import '../app/main_scaffold.dart';
 
 // --- Styling Constants ---
 const Color _primaryColor = Color(0xFF2563EB);
@@ -40,6 +40,12 @@ class _SearchPageState extends State<SearchPage> {
   final ScrollController _quickScrollCtrl = ScrollController();
   bool _showLeftArrow = false;
   bool _showRightArrow = true;
+
+  // === ADD THE CLEAN QUERY METHOD HERE ===
+  String _cleanQuery(String query) {
+    // Trim, lowercase, and collapse multiple spaces
+    return query.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
 
   @override
   void initState() {
@@ -75,6 +81,17 @@ class _SearchPageState extends State<SearchPage> {
 
   // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
+    final query = _cleanQuery(_ctrl.text); // Use the helper here
+  
+  // If query is empty after cleaning, clear results and return
+  if (query.isEmpty) {
+    setState(() {
+      _results = [];
+      _loading = false;
+    });
+    return;
+  }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -82,7 +99,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
-      final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
+      final res = await MockDatabase.searchProducts(query, fail: fail);
       List<Product> withPrices = res;
 
       // Apply category filter
@@ -617,12 +634,13 @@ class _SearchPageState extends State<SearchPage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        // Navigate back to the first route (MainScaffold) and pop the search page
-                                        Navigator.popUntil(
-                                          context,
-                                          (route) => route.isFirst,
-                                        );
-                                      },
+                                         // Always push the home screen and remove all previous routes
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => const MainScaffold()), // Your home widget
+                                            (route) => false, // Remove all existing routes
+                                          );
+                                        },
                                       child: const Text(
                                         'Home',
                                         style: TextStyle(
