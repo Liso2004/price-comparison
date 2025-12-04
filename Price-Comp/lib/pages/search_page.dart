@@ -656,21 +656,27 @@ class _SearchPageState extends State<SearchPage> {
                           ),
                         ),
                       )
-                    : ListView.separated(
-                        itemCount: _results.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, idx) {
-                          final p = _results[idx];
-                          final price = MockDatabase.getMockPrice(p.id);
-                          final retailerId = _getRetailerIdForProduct(p.id);
-                          return ProductCard(
-                            product: p,
-                            price: price,
-                            retailerId: retailerId,
-                            onTap: () => _onProductTap(p, retailerId: retailerId),
-                          );
-                        },
-                      ),
+                     : Container(
+                      padding: const EdgeInsets.all(16.0),
+                      child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3, // 3 items per row
+                            crossAxisSpacing: 1,
+                            mainAxisSpacing: 1,
+                            childAspectRatio: 0.70, // Adjust this for card proportions
+                          ),
+                          itemCount: _results.length,
+                          itemBuilder: (context, idx) {
+                            final p = _results[idx];
+                            final price = MockDatabase.getMockPrice(p.id);
+                            return ProductCard(
+                              product: p,
+                              price: price,
+                              onTap: () => _onProductTap(p),
+                            );
+                          },
+                        ),
+                    ),
               ),
             ],
           ),

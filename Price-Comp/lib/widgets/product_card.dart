@@ -27,21 +27,22 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.all(9),
-          height: 240,
+          height: 175,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              
               // 1. PICTURE - Top
               Container(
                 width: double.infinity,
-                height: 80, // Good size for product image
+                height: 70, // Good size for product image
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Icon(
                   Icons.shopping_bag, // Or use Icons.image
-                  size: 50,
+                  size: 40,
                   color: Colors.grey,
                 ),
               ),
@@ -54,12 +55,12 @@ class ProductCard extends StatelessWidget {
                   fontSize: 12,
                   fontFamily: 'Inter',
                   color: Color(0xFF3D3D3D),
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 2),
 
               // 3. PRODUCT NAME - Below retailer
               Expanded(
@@ -67,7 +68,7 @@ class ProductCard extends StatelessWidget {
                   product.name,
                   style: const TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600, // Semi-bold
                     height: 1,
                     color: Color(0xFF3D3D3D), // Dark text
@@ -79,7 +80,7 @@ class ProductCard extends StatelessWidget {
               const SizedBox(height: 1),
 
               // Spacer to push price to bottom
-              const Spacer(),
+              // const Spacer(),
 
               // 4. PRICE - Bottom
               Text(
@@ -87,7 +88,7 @@ class ProductCard extends StatelessWidget {
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,
-                  fontWeight: FontWeight.w500, // Semi-bold
+                  fontWeight: FontWeight.w600, // Semi-bold
                   color: Color(0xFF2563EB),
                 ),
               ),
