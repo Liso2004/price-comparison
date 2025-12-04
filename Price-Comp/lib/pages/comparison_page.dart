@@ -18,7 +18,7 @@ class _ComparisonPageState extends State<ComparisonPage>
   List<RetailerPrice> _prices = [];
   bool _loading = true;
   String? _error;
-  Set<String> selectedRetailers = {}; // Empty by default - no auto-selection
+  Set<String> selectedRetailers = {'r1', 'r2'};
   late AnimationController _shimmerController;
   bool _isInitialLoad = true;
 
@@ -48,7 +48,6 @@ class _ComparisonPageState extends State<ComparisonPage>
     setState(() {
       _loading = true;
       _error = null;
-      // On refresh: clear all selections and previous data
       if (isRefresh) {
         selectedRetailers.clear();
         _prices = [];
@@ -63,7 +62,6 @@ class _ComparisonPageState extends State<ComparisonPage>
       );
       setState(() {
         _prices = res;
-        // No auto-selection - user must manually select retailers
         _isInitialLoad = false;
       });
     } catch (e) {
@@ -86,7 +84,6 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   List<RetailerPrice> _getFilteredPrices() {
-    // If no retailers selected, return empty list to show empty state
     if (selectedRetailers.isEmpty) {
       return [];
     }
@@ -95,7 +92,6 @@ class _ComparisonPageState extends State<ComparisonPage>
         .toList();
   }
 
-  // Function to launch retailer website or product page
   Future<void> _launchRetailerWebsite(
     String retailerId, {
     String? productUrl,
@@ -107,7 +103,6 @@ class _ComparisonPageState extends State<ComparisonPage>
       'r4': 'https://www.shoprite.co.za',
     };
 
-    // Use product URL if available, otherwise fall back to retailer website
     final website =
         productUrl ?? retailerWebsites[retailerId] ?? 'https://www.google.com';
     final Uri url = Uri.parse(website);
@@ -116,7 +111,6 @@ class _ComparisonPageState extends State<ComparisonPage>
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        // For Android, if canLaunchUrl fails, try anyway as a fallback
         try {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } catch (e) {
@@ -140,148 +134,166 @@ class _ComparisonPageState extends State<ComparisonPage>
     final filteredPrices = _getFilteredPrices();
     final best = getBestPrice();
 
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Compare'),
-          leading: BackButton(onPressed: () => Navigator.pop(context)),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return Material(
+      color: Colors.white,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            title: const Text('Compare'),
+            leading: BackButton(onPressed: () => Navigator.pop(context)),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            foregroundColor: Colors.black,
+          ),
+          body: Container(
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
                 children: [
-                  Material(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(6),
-                    elevation: 2,
-                    child: InkWell(
-                      onTap: () => _loadComparison(isRefresh: true),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        child: const Text(
-                          'Refresh',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Material(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(6),
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () => _loadComparison(isRefresh: true),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            child: const Text(
+                              'Refresh',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (_loading)
+                    _buildProductPlaceholder()
+                  else if (selectedRetailers.isNotEmpty)
+                    _buildProductCard(),
+                  if (_loading || selectedRetailers.isNotEmpty)
+                    const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _loading
+                        ? _buildFilterChipsPlaceholder()
+                        : Wrap(
+                            spacing: 8,
+                            children: MockDatabase.retailers.map((r) {
+                              final id = r['id']!;
+                              final name = r['name']!;
+                              final sel = selectedRetailers.contains(id);
+                              return FilterChip(
+                                label: Text(name),
+                                selected: sel,
+                                onSelected: (v) => setState(() {
+                                  if (v) {
+                                    selectedRetailers.add(id);
+                                  } else {
+                                    selectedRetailers.remove(id);
+                                  }
+                                }),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: Container(
+                      color: Colors.white,
+                      child: _loading
+                          ? ListView.builder(
+                              itemCount: 4,
+                              itemBuilder: (_, __) =>
+                                  const RetailerPlaceholder(),
+                            )
+                          : _error != null
+                          ? SingleChildScrollView(
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline,
+                                        size: 64,
+                                        color: Color(0xFF3D3D3D),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Error: $_error',
+                                        style: const TextStyle(
+                                          color: Color(0xFF3D3D3D),
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton(
+                                        onPressed: () => _loadComparison(),
+                                        child: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : selectedRetailers.isEmpty || filteredPrices.isEmpty
+                          ? SingleChildScrollView(
+                              child: Center(child: _buildEmptyState()),
+                            )
+                          : ListView.separated(
+                              itemCount: filteredPrices.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 8),
+                              itemBuilder: (context, idx) {
+                                final sortedList = List<RetailerPrice>.from(
+                                  filteredPrices,
+                                );
+                                sortedList.sort((a, b) {
+                                  if (a.price == null) return 1;
+                                  if (b.price == null) return -1;
+                                  return a.price!.compareTo(b.price!);
+                                });
+
+                                final item = sortedList[idx];
+                                final isBest =
+                                    item.price != null &&
+                                    best != null &&
+                                    (item.price! - best).abs() < 0.001;
+                                return _buildRetailerCard(item, isBest);
+                              },
+                            ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              // Only show product card when loading or when retailers are selected
-              if (_loading)
-                _buildProductPlaceholder()
-              else if (selectedRetailers.isNotEmpty)
-                _buildProductCard(),
-              if (_loading || selectedRetailers.isNotEmpty)
-                const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _loading
-                    ? _buildFilterChipsPlaceholder()
-                    : Wrap(
-                        spacing: 8,
-                        children: MockDatabase.retailers.map((r) {
-                          final id = r['id']!;
-                          final name = r['name']!;
-                          final sel = selectedRetailers.contains(id);
-                          return FilterChip(
-                            label: Text(name),
-                            selected: sel,
-                            onSelected: (v) => setState(() {
-                              if (v) {
-                                selectedRetailers.add(id);
-                              } else {
-                                selectedRetailers.remove(id);
-                              }
-                            }),
-                          );
-                        }).toList(),
-                      ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _loading
-                    ? ListView.builder(
-                        itemCount: 4,
-                        itemBuilder: (_, __) => const RetailerPlaceholder(),
-                      )
-                    : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: 64,
-                              color: Color(0xFF3D3D3D),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Error: $_error',
-                              style: const TextStyle(
-                                color: Color(0xFF3D3D3D),
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _loadComparison(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : selectedRetailers.isEmpty || filteredPrices.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        itemCount: filteredPrices.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, idx) {
-                          // Sort list so best price is first
-                          final sortedList = List<RetailerPrice>.from(
-                            filteredPrices,
-                          );
-                          sortedList.sort((a, b) {
-                            if (a.price == null) return 1;
-                            if (b.price == null) return -1;
-                            return a.price!.compareTo(b.price!);
-                          });
-
-                          final item = sortedList[idx];
-                          final isBest =
-                              item.price != null &&
-                              best != null &&
-                              (item.price! - best).abs() < 0.001;
-                          return _buildRetailerCard(item, isBest);
-                        },
-                      ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Product Card (Normal State)
   Widget _buildProductCard() {
     final bestPrice = getBestPrice();
     final hasBestPrice = bestPrice != null;
 
-    // Find the retailer with the best price
     final bestRetailerPrice = _getFilteredPrices().firstWhere(
       (p) => p.price != null && p.price == bestPrice,
       orElse: () => _prices.firstWhere(
@@ -311,7 +323,6 @@ class _ComparisonPageState extends State<ComparisonPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product Image at top
               Center(
                 child: Container(
                   width: 120,
@@ -327,8 +338,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Retailer Name
               Text(
                 bestRetailerName,
                 style: const TextStyle(
@@ -339,8 +348,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ),
               ),
               const SizedBox(height: 4),
-
-              // Product Name
               Text(
                 widget.product.name,
                 style: const TextStyle(
@@ -351,8 +358,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ),
               ),
               const SizedBox(height: 4),
-
-              // Product Description
               Text(
                 '${widget.product.size} • ${widget.product.category}',
                 style: const TextStyle(
@@ -362,8 +367,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Price
               Text(
                 hasBestPrice
                     ? 'R ${bestPrice!.toStringAsFixed(2)}'
@@ -375,10 +378,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                   fontFamily: 'Inter',
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Proceed to Buy Button - Launches retailer website
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -422,8 +422,6 @@ class _ComparisonPageState extends State<ComparisonPage>
             ],
           ),
         ),
-
-        // Lowest Price Badge - Top Right Corner
         if (hasBestPrice)
           Positioned(
             top: 12,
@@ -449,7 +447,6 @@ class _ComparisonPageState extends State<ComparisonPage>
     );
   }
 
-  // Product Placeholder (Loading State with Shimmer)
   Widget _buildProductPlaceholder() {
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -469,7 +466,6 @@ class _ComparisonPageState extends State<ComparisonPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image placeholder
                   Center(
                     child: Container(
                       width: 120,
@@ -481,8 +477,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Retailer name placeholder
                   Container(
                     height: 16,
                     width: 100,
@@ -492,8 +486,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Product name placeholder
                   Container(
                     height: 20,
                     width: double.infinity,
@@ -503,8 +495,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Description placeholder
                   Container(
                     height: 14,
                     width: 150,
@@ -514,8 +504,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Price placeholder
                   Container(
                     height: 28,
                     width: 100,
@@ -525,8 +513,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Button placeholder
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -543,7 +529,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ],
               ),
             ),
-            // Badge placeholder
             Positioned(
               top: 12,
               right: 12,
@@ -562,14 +547,12 @@ class _ComparisonPageState extends State<ComparisonPage>
     );
   }
 
-  // Shimmer Color Generator
   Color _getShimmerColor() {
     final value = _shimmerController.value;
     final opacity = (0.3 + (value * 0.2)).clamp(0.0, 1.0);
     return Colors.grey.withOpacity(opacity);
   }
 
-  // Filter Chips Placeholder (Skeleton)
   Widget _buildFilterChipsPlaceholder() {
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -582,7 +565,7 @@ class _ComparisonPageState extends State<ComparisonPage>
             4,
             (index) => Container(
               height: 32,
-              width: 80 + (index * 10.0), // Varying widths
+              width: 80 + (index * 10.0),
               decoration: BoxDecoration(
                 color: shimmerColor,
                 borderRadius: BorderRadius.circular(16),
@@ -594,7 +577,6 @@ class _ComparisonPageState extends State<ComparisonPage>
     );
   }
 
-  // Empty State
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -630,7 +612,6 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   Widget _buildRetailerCard(RetailerPrice price, bool isBest) {
-    // Updated retailer mapping with Shoprite
     final Map<String, Map<String, String>> retailerMapping = {
       'r1': {'logo': 'assets/picknpay.png', 'name': 'Pick n Pay'},
       'r2': {'logo': 'assets/checkers.png', 'name': 'Checkers'},
@@ -638,11 +619,9 @@ class _ComparisonPageState extends State<ComparisonPage>
       'r4': {'logo': 'assets/shoprite.png', 'name': 'Shoprite'},
     };
 
-    // Get retailer info from mapping
     final retailerInfo =
         retailerMapping[price.retailerId] ??
         {'logo': 'assets/shoprite.png', 'name': 'Shoprite'};
-    final String logoAsset = retailerInfo['logo']!;
     final String retailerName = retailerInfo['name']!;
 
     return Container(
@@ -664,7 +643,6 @@ class _ComparisonPageState extends State<ComparisonPage>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Image
           Container(
             width: 70,
             height: 70,
@@ -678,12 +656,10 @@ class _ComparisonPageState extends State<ComparisonPage>
             ),
           ),
           const SizedBox(width: 12),
-          // Retailer and Product Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Retailer Name
                 Text(
                   retailerName,
                   style: const TextStyle(
@@ -694,7 +670,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Product Name
                 Text(
                   widget.product.name,
                   style: const TextStyle(
@@ -707,7 +682,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                // Price
                 Text(
                   price.price != null
                       ? 'R${price.price!.toStringAsFixed(2)}'
@@ -722,7 +696,6 @@ class _ComparisonPageState extends State<ComparisonPage>
               ],
             ),
           ),
-          // Lowest Price Badge
           if (isBest && price.price != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
