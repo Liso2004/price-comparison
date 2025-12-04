@@ -55,22 +55,26 @@ class _HomePageState extends State<HomePage> {
   Expanded(
     child: TextField(
       controller: _searchCtrl,
-      style: const TextStyle(color: Colors.grey), // text inside input
+    style: const TextStyle(color: Colors.grey),
       decoration: InputDecoration(
         hintText: 'Search for any product...',
-        hintStyle: const TextStyle(color: Colors.grey), // hint text color
+      hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: Colors.grey.shade100,
 
-        // removed prefix icon
-        suffixIcon: _searchCtrl.text.isEmpty
-            ? null
-            : IconButton(
+      // 🔥 Always show clear button when text is not empty
+      suffixIcon: _searchCtrl.text.isNotEmpty
+          ? IconButton(
                 icon: const Icon(Icons.clear, color: Colors.grey),
-                onPressed: () => setState(() => _searchCtrl.clear()),
-              ),
+              onPressed: () {
+                _searchCtrl.clear();
+                setState(() {}); // refresh to hide X
+              },
+            )
+          : const SizedBox.shrink(),
 
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      contentPadding:
+          const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
