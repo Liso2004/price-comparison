@@ -95,7 +95,8 @@ class _HomePageState extends State<HomePage> {
                   child: TextField(
                     controller: _searchCtrl,
                     decoration: InputDecoration(
-                      hintText: 'Search products, e.g. "Milk"',
+                      fillColor: Colors.white,
+                      hintText: 'Search for products',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchCtrl.text.isEmpty
                           ? null
