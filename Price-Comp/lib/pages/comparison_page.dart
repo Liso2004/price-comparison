@@ -18,7 +18,7 @@ class _ComparisonPageState extends State<ComparisonPage>
   List<RetailerPrice> _prices = [];
   bool _loading = true;
   String? _error;
-  Set<String> selectedRetailers = {'r1', 'r2'};
+  Set<String> selectedRetailers = {}; // Empty by default - no auto-selection
   late AnimationController _shimmerController;
   bool _isInitialLoad = true;
 
@@ -63,23 +63,8 @@ class _ComparisonPageState extends State<ComparisonPage>
       );
       setState(() {
         _prices = res;
-        // Only auto-select lowest price retailer on initial load
-        if (_isInitialLoad && res.isNotEmpty) {
-          // Find retailer with lowest price
-          RetailerPrice? lowestPrice;
-          for (final price in res) {
-            if (price.price != null) {
-              if (lowestPrice == null || price.price! < lowestPrice.price!) {
-                lowestPrice = price;
-              }
-            }
-          }
-          // Auto-select the retailer with lowest price
-          if (lowestPrice != null) {
-            selectedRetailers = {lowestPrice.retailerId};
-          }
-          _isInitialLoad = false;
-        }
+        // No auto-selection - user must manually select retailers
+        _isInitialLoad = false;
       });
     } catch (e) {
       setState(() => _error = e.toString());
@@ -101,9 +86,9 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   List<RetailerPrice> _getFilteredPrices() {
-    // If no retailers selected, show all retailers
+    // If no retailers selected, return empty list to show empty state
     if (selectedRetailers.isEmpty) {
-      return _prices;
+      return [];
     }
     return _prices
         .where((p) => selectedRetailers.contains(p.retailerId))
@@ -184,8 +169,13 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ],
               ),
               const SizedBox(height: 8),
-              _loading ? _buildProductPlaceholder() : _buildProductCard(),
-              const SizedBox(height: 12),
+              // Only show product card when loading or when retailers are selected
+              if (_loading)
+                _buildProductPlaceholder()
+              else if (selectedRetailers.isNotEmpty)
+                _buildProductCard(),
+              if (_loading || selectedRetailers.isNotEmpty)
+                const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerLeft,
                 child: _loading
@@ -244,7 +234,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                           ],
                         ),
                       )
-                    : _prices.isEmpty
+                    : selectedRetailers.isEmpty || filteredPrices.isEmpty
                     ? _buildEmptyState()
                     : ListView.separated(
                         itemCount: filteredPrices.length,
@@ -616,7 +606,7 @@ class _ComparisonPageState extends State<ComparisonPage>
             ),
             const SizedBox(height: 12),
             Text(
-              'This product is not available at the selected retailers.',
+              'Please select a retailer to view prices and compare.',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),

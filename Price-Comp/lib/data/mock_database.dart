@@ -296,7 +296,7 @@ class MockDatabase {
     {'id': 'r1', 'name': 'Pick n Pay'},
     {'id': 'r2', 'name': 'Checkers'},
     {'id': 'r3', 'name': 'Woolworths'},
-    {'id': 'r4', 'name': 'Game'},
+    {'id': 'r4', 'name': 'Shoprite'},
   ];
 
   static double getMockPrice(String productId) {
