@@ -29,7 +29,7 @@ class _FilterPageState extends State<FilterPage> {
     'Woolworths',
     'Checkers',
     'Pick n Pay',
-    'Makro',
+    'Shoprite',
   ];
   final List<String> _brands = [
     'Sasko',
