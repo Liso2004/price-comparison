@@ -7,7 +7,12 @@ import '../widgets/retailer_placeholder.dart';
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
-  const ComparisonPage({super.key, required this.product});
+  final String? initialRetailerId;
+  const ComparisonPage({
+    super.key,
+    required this.product,
+    this.initialRetailerId,
+  });
 
   @override
   _ComparisonPageState createState() => _ComparisonPageState();
@@ -18,7 +23,7 @@ class _ComparisonPageState extends State<ComparisonPage>
   List<RetailerPrice> _prices = [];
   bool _loading = true;
   String? _error;
-  Set<String> selectedRetailers = {'r1', 'r2'};
+  Set<String> selectedRetailers = {}; // Empty by default - no auto-selection
   late AnimationController _shimmerController;
   bool _isInitialLoad = true;
 
@@ -30,6 +35,10 @@ class _ComparisonPageState extends State<ComparisonPage>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
     debugPrint('[ComparisonPage] started for ${widget.product.id}');
+    // Auto-select the initial retailer if provided
+    if (widget.initialRetailerId != null) {
+      selectedRetailers.add(widget.initialRetailerId!);
+    }
     _loadComparison();
   }
 
@@ -48,8 +57,12 @@ class _ComparisonPageState extends State<ComparisonPage>
     setState(() {
       _loading = true;
       _error = null;
+      // On refresh: reset to initial retailer selection (if any)
       if (isRefresh) {
         selectedRetailers.clear();
+        if (widget.initialRetailerId != null) {
+          selectedRetailers.add(widget.initialRetailerId!);
+        }
         _prices = [];
         _isInitialLoad = false;
       }
@@ -62,6 +75,7 @@ class _ComparisonPageState extends State<ComparisonPage>
       );
       setState(() {
         _prices = res;
+        // No auto-selection - user must manually select retailers
         _isInitialLoad = false;
       });
     } catch (e) {
@@ -84,6 +98,7 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   List<RetailerPrice> _getFilteredPrices() {
+    // If no retailers selected, return empty list to show empty state
     if (selectedRetailers.isEmpty) {
       return [];
     }
@@ -180,77 +195,63 @@ class _ComparisonPageState extends State<ComparisonPage>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  if (_loading)
-                    _buildProductPlaceholder()
-                  else if (selectedRetailers.isNotEmpty)
-                    _buildProductCard(),
-                  if (_loading || selectedRetailers.isNotEmpty)
-                    const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: _loading
-                        ? _buildFilterChipsPlaceholder()
-                        : Wrap(
-                            spacing: 8,
-                            children: MockDatabase.retailers.map((r) {
-                              final id = r['id']!;
-                              final name = r['name']!;
-                              final sel = selectedRetailers.contains(id);
-                              return FilterChip(
-                                label: Text(name),
-                                selected: sel,
-                                onSelected: (v) => setState(() {
-                                  if (v) {
-                                    selectedRetailers.add(id);
-                                  } else {
-                                    selectedRetailers.remove(id);
-                                  }
-                                }),
-                              );
-                            }).toList(),
-                          ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Container(
-                      color: Colors.white,
-                      child: _loading
-                          ? ListView.builder(
-                              itemCount: 4,
-                              itemBuilder: (_, __) =>
-                                  const RetailerPlaceholder(),
-                            )
-                          : _error != null
-                          ? SingleChildScrollView(
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.error_outline,
-                                        size: 64,
-                                        color: Color(0xFF3D3D3D),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Error: $_error',
-                                        style: const TextStyle(
-                                          color: Color(0xFF3D3D3D),
-                                          fontSize: 16,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      ElevatedButton(
-                                        onPressed: () => _loadComparison(),
-                                        child: const Text('Retry'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Only show product card when loading or when retailers are selected
+              if (_loading)
+                _buildProductPlaceholder()
+              else if (selectedRetailers.isNotEmpty)
+                _buildProductCard(),
+              if (_loading || selectedRetailers.isNotEmpty)
+                const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _loading
+                    ? _buildFilterChipsPlaceholder()
+                    : Wrap(
+                        spacing: 8,
+                        children: MockDatabase.retailers.map((r) {
+                          final id = r['id']!;
+                          final name = r['name']!;
+                          final sel = selectedRetailers.contains(id);
+                          return FilterChip(
+                            label: Text(name),
+                            selected: sel,
+                            onSelected: (v) => setState(() {
+                              if (v) {
+                                selectedRetailers.add(id);
+                              } else {
+                                selectedRetailers.remove(id);
+                              }
+                            }),
+                          );
+                        }).toList(),
+                      ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: _loading
+                    ? ListView.builder(
+                        itemCount: 4,
+                        itemBuilder: (_, __) => const RetailerPlaceholder(),
+                      )
+                    : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Color(0xFF3D3D3D),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error: $_error',
+                              style: const TextStyle(
+                                color: Color(0xFF3D3D3D),
+                                fontSize: 16,
                               ),
                             )
                           : selectedRetailers.isEmpty || filteredPrices.isEmpty
@@ -279,9 +280,33 @@ class _ComparisonPageState extends State<ComparisonPage>
                                 return _buildRetailerCard(item, isBest);
                               },
                             ),
-                    ),
-                  ),
-                ],
+                          ],
+                        ),
+                      )
+                    : selectedRetailers.isEmpty || filteredPrices.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        itemCount: filteredPrices.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, idx) {
+                          // Sort list so best price is first
+                          final sortedList = List<RetailerPrice>.from(
+                            filteredPrices,
+                          );
+                          sortedList.sort((a, b) {
+                            if (a.price == null) return 1;
+                            if (b.price == null) return -1;
+                            return a.price!.compareTo(b.price!);
+                          });
+
+                          final item = sortedList[idx];
+                          final isBest =
+                              item.price != null &&
+                              best != null &&
+                              (item.price! - best).abs() < 0.001;
+                          return _buildRetailerCard(item, isBest);
+                        },
+                      ),
               ),
             ),
           ),

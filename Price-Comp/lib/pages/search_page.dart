@@ -113,11 +113,23 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  void _onProductTap(Product p) {
+  void _onProductTap(Product p, {String? retailerId}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ComparisonPage(product: p)),
+      MaterialPageRoute(
+        builder: (_) => ComparisonPage(
+          product: p,
+          initialRetailerId: retailerId,
+        ),
+      ),
     );
+  }
+
+  /// Get retailer ID for a product (matches ProductCard's display logic)
+  String _getRetailerIdForProduct(String productId) {
+    const retailers = ['r2', 'r1', 'r3', 'r4']; // Checkers, Pick n Pay, Woolworths, Shoprite
+    final index = productId.hashCode % retailers.length;
+    return retailers[index];
   }
 
   /// Sorts results based on selected sort type
