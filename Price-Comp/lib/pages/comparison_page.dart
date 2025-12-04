@@ -155,132 +155,144 @@ class _ComparisonPageState extends State<ComparisonPage>
     final filteredPrices = _getFilteredPrices();
     final best = getBestPrice();
 
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Compare'),
-          leading: BackButton(onPressed: () => Navigator.pop(context)),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Compare'),
+        leading: BackButton(onPressed: () => Navigator.pop(context)),
+      ),
+      body: Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            // Top controls
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
                 children: [
-                  Material(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(6),
-                    elevation: 2,
-                    child: InkWell(
-                      onTap: () => _loadComparison(isRefresh: true),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        child: const Text(
-                          'Refresh',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Material(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(6),
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () => _loadComparison(isRefresh: true),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            child: const Text(
+                              'Refresh',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _loading ? _buildProductPlaceholder() : _buildProductCard(),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _loading
+                        ? _buildFilterChipsPlaceholder()
+                        : Wrap(
+                            spacing: 8,
+                            children: MockDatabase.retailers.map((r) {
+                              final id = r['id']!;
+                              final name = r['name']!;
+                              final sel = selectedRetailers.contains(id);
+                              return FilterChip(
+                                label: Text(name),
+                                selected: sel,
+                                onSelected: (v) => setState(() {
+                                  if (v) {
+                                    selectedRetailers.add(id);
+                                  } else {
+                                    selectedRetailers.remove(id);
+                                  }
+                                }),
+                              );
+                            }).toList(),
+                          ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              _loading ? _buildProductPlaceholder() : _buildProductCard(),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _loading
-                    ? _buildFilterChipsPlaceholder()
-                    : Wrap(
-                        spacing: 8,
-                        children: MockDatabase.retailers.map((r) {
-                          final id = r['id']!;
-                          final name = r['name']!;
-                          final sel = selectedRetailers.contains(id);
-                          return FilterChip(
-                            label: Text(name),
-                            selected: sel,
-                            onSelected: (v) => setState(() {
-                              if (v) {
-                                selectedRetailers.add(id);
-                              } else {
-                                selectedRetailers.remove(id);
-                              }
-                            }),
-                          );
-                        }).toList(),
-                      ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _loading
-                    ? ListView.builder(
-                        itemCount: 4,
-                        itemBuilder: (_, __) => const RetailerPlaceholder(),
-                      )
-                    : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: 64,
-                              color: Color(0xFF3D3D3D),
+            ),
+            
+            // Main content area - This will take remaining space
+            Expanded(
+              child: _loading
+                  ? ListView.builder(
+                      itemCount: 4,
+                      itemBuilder: (_, __) => const RetailerPlaceholder(),
+                    )
+                  : _error != null
+                      ? SingleChildScrollView(
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  size: 64,
+                                  color: Color(0xFF3D3D3D),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error: $_error',
+                                  style: const TextStyle(
+                                    color: Color(0xFF3D3D3D),
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => _loadComparison(),
+                                  child: const Text('Retry'),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Error: $_error',
-                              style: const TextStyle(
-                                color: Color(0xFF3D3D3D),
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _loadComparison(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _prices.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        itemCount: filteredPrices.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, idx) {
-                          // Sort list so best price is first
-                          final sortedList = List<RetailerPrice>.from(
-                            filteredPrices,
-                          );
-                          sortedList.sort((a, b) {
-                            if (a.price == null) return 1;
-                            if (b.price == null) return -1;
-                            return a.price!.compareTo(b.price!);
-                          });
+                          ),
+                        )
+                      : _prices.isEmpty
+                          ? SingleChildScrollView(
+                              child: Center(child: _buildEmptyState()),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: filteredPrices.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 8),
+                              itemBuilder: (context, idx) {
+                                // Sort list so best price is first
+                                final sortedList = List<RetailerPrice>.from(
+                                  filteredPrices,
+                                );
+                                sortedList.sort((a, b) {
+                                  if (a.price == null) return 1;
+                                  if (b.price == null) return -1;
+                                  return a.price!.compareTo(b.price!);
+                                });
 
-                          final item = sortedList[idx];
-                          final isBest =
-                              item.price != null &&
-                              best != null &&
-                              (item.price! - best).abs() < 0.001;
-                          return _buildRetailerCard(item, isBest);
-                        },
-                      ),
-              ),
-            ],
-          ),
+                                final item = sortedList[idx];
+                                final isBest =
+                                    item.price != null &&
+                                    best != null &&
+                                    (item.price! - best).abs() < 0.001;
+                                return _buildRetailerCard(item, isBest);
+                              },
+                            ),
+            ),
+          ],
         ),
       ),
     );
@@ -402,9 +414,9 @@ class _ComparisonPageState extends State<ComparisonPage>
                       child: InkWell(
                         onTap: hasBestPrice
                             ? () => _launchRetailerWebsite(
-                                bestRetailerId,
-                                productUrl: bestRetailerPrice.productUrl,
-                              )
+                                  bestRetailerId,
+                                  productUrl: bestRetailerPrice.productUrl,
+                                )
                             : null,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
