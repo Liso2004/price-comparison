@@ -1,0 +1,112 @@
+[
+	{
+		"productURL": "https://www.checkers.co.za/product/energizer-max-aaa-alkaline-batteries-12-pack-10689259EA",
+		"productName": "Energizer MAX AAA Alkaline Batteries 12-Pack",
+		"price": "R169.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/6866eed8d234e2cd0bca6590",
+		"category": "Electronics",
+		"retailer": "Checkers"
+	},
+
+	{
+		"productURL": "https://www.checkers.co.za/product/sandisk-cruzer-glide-retractable-usb-a-30-flash-drive-32gb-10709366EA",
+		"productName": "SanDisk Cruzer Glide Retractable USB-A 3.0 Flash Drive 32GB",
+		"price": "R129.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/63e10204749cf491e8b04982",
+		"category": "Electronics",
+		"retailer": "Checkers"
+
+	},
+	{
+		"productName": "Nulaid Grade 1 Large Eggs 30 x >51g",
+		"price": "R109.99",
+		"productURL": "https://www.checkers.co.za/product/nulaid-grade-1-large-eggs-30-x-51g-10136777EA",
+		"productImageURL": "https://catalog.sixty60.co.za/v2/files/63d4b00116c7ec590330f036?width=320&height=320",
+		"category": "Groceries",
+		"retailer": "Checkers"
+
+	},
+	{
+		"productName": "Checkers Housebrand Full Cream Milk 6 x 1L",
+		"price": "R94.99",
+		"productURL": "https://www.checkers.co.za/product/checkers-housebrand-full-cream-milk-6-x-1l-10156094PK1",
+		"productImageURL": "https://catalog.sixty60.co.za/v2/files/67575c27e175517e7a5045e7?width=320&height=320",
+		"category": "Groceries",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/grand-pa-headache-powder-38-pack-10750813EA",
+		"productName": "Grand-Pa Headache Powder 38 Pack",
+		"price": "R87.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/684c4aa170622939864c4d34",
+		"category": "Health & Wellness",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/calpol-strawberry-flavoured-paediatric-suspension-100ml-10144902EA",
+		"productName": "Calpol Strawberry Flavoured Paediatric Suspension 100ml",
+		"price": "R79.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/68417c199f492b308b1d8f8b",
+		"category": "Health & Wellness",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/sunlight-original-dishwashing-liquid-750ml-10126901EA",
+		"productName": "Sunlight Original Dishwashing Liquid 750ml",
+		"price": "R37.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/6780c0feff83876b40674186",
+		"category": "Cleaning & Household",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/surf-hand-washing-powder-2kg-10216662EA",
+		"productName": "Surf Hand Washing Powder 2kg",
+		"price": "R62.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/63d1b9ba749cf491e8a0e2ad",
+		"category": "Cleaning & Household",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/colgate-triple-action-xtra-fluoride-toothpaste-100ml-10938896EA",
+		"productName": "Colgate Triple Action Xtra Fluoride Toothpaste 100ml",
+		"price": "R24.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/6904e0e5ea3c21fabfe043af",
+		"category": "Personal Care",
+		"retailer": "Checkers"
+
+	},
+    {
+		"productURL": "https://www.checkers.co.za/product/dettol-antiseptic-liquid-750ml-10128732EA",
+		"productName": "Dettol Antiseptic Liquid 750ml",
+		"price": "R79.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/6807c88b8f572206ed13e40b",
+		"category": "Personal Care",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/staedtler-wood-free-pencil-crayons-24-pack-10514798EA",
+		"productName": "Staedtler Wood-Free Pencil Crayons 24 Pack",
+		"price": "R64.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/672a8445841309d3872cdd74",
+		"category": "Stationery",
+		"retailer": "Checkers"
+
+	}, 
+    {
+		"productURL": "https://www.checkers.co.za/product/scholar-a4-1-quire-feint-and-margin-hardcover-counter-book-96-pages-10110933EA",
+		"productName": "Scholar A4 1 Quire Feint & Margin Hardcover Counter Book 96 Pages",
+		"price": "R14.99",
+		"productImageURL": "https://catalog.sixty60.co.za/files/63d87a21bb819c5947d77059",
+		"category": "Stationery",
+		"retailer": "Checkers"
+
+	}
+
+
+]

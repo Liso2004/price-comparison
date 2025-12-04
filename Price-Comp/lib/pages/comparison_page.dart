@@ -95,8 +95,11 @@ class _ComparisonPageState extends State<ComparisonPage>
         .toList();
   }
 
-  // Function to launch retailer website
-  Future<void> _launchRetailerWebsite(String retailerId) async {
+  // Function to launch retailer website or product page
+  Future<void> _launchRetailerWebsite(
+    String retailerId, {
+    String? productUrl,
+  }) async {
     final Map<String, String> retailerWebsites = {
       'r1': 'https://www.pnp.co.za',
       'r2': 'https://www.checkers.co.za',
@@ -104,14 +107,21 @@ class _ComparisonPageState extends State<ComparisonPage>
       'r4': 'https://www.shoprite.co.za',
     };
 
-    final website = retailerWebsites[retailerId] ?? 'https://www.google.com';
+    // Use product URL if available, otherwise fall back to retailer website
+    final website =
+        productUrl ?? retailerWebsites[retailerId] ?? 'https://www.google.com';
     final Uri url = Uri.parse(website);
 
     try {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        throw 'Could not launch $website';
+        // For Android, if canLaunchUrl fails, try anyway as a fallback
+        try {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          throw 'Could not launch $website';
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -381,7 +391,10 @@ class _ComparisonPageState extends State<ComparisonPage>
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: hasBestPrice
-                            ? () => _launchRetailerWebsite(bestRetailerId)
+                            ? () => _launchRetailerWebsite(
+                                bestRetailerId,
+                                productUrl: bestRetailerPrice.productUrl,
+                              )
                             : null,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
