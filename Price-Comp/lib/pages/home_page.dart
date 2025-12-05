@@ -6,13 +6,15 @@ import 'legal_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _chipScrollCtrl = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   void _onSearch() {
     final text = _searchCtrl.text.trim();
     if (text.isEmpty) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: text)),
@@ -54,171 +57,282 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = Theme.of(context).scaffoldBackgroundColor;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            //---------------------------------------------------------------------
-            // SEARCH BAR
-            //---------------------------------------------------------------------
-            Row(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Search products, e.g. "Milk"',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchCtrl.text.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () =>
-                                  setState(() => _searchCtrl.clear()),
-                            ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                // ------------------------ LOGO ------------------------
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1,
                     ),
-                    onSubmitted: (_) => _onSearch(),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _onSearch,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.search),
-                      SizedBox(width: 6),
-                      Text('Search'),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 44,
+                        offset: Offset(2, 0),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            //---------------------------------------------------------------------
-            // QUICK SEARCH
-            //---------------------------------------------------------------------
-            Text(
-              'Quick Search',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 42,
-                    child: ListView.separated(
-                      controller: _chipScrollCtrl,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: MockDatabase.quickSearches.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final q = MockDatabase.quickSearches[index];
-                        return GestureDetector(
-                          onTap: () => _onQuickTap(q),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2563EB),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Text(
-                              q,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
+                  height: 60,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/logo.png',
+                          height: 40,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'ShopeWise',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 22,
+                              color: Color(0xFF2563EB),
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 16),
+
+                // ------------------------ SEARCH BAR ------------------------
                 Container(
-                  width: 48,
-                  height: 40,
                   decoration: BoxDecoration(
-                    color: bg,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                    boxShadow: const [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Color(0x0A000000),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: IconButton(
-                    splashRadius: 22,
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: () => _scrollChips(true),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'Search for products...',
+                            hintStyle: TextStyle(
+                              fontFamily: "Inter",
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontFamily: "Inter",
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                          onSubmitted: (_) => _onSearch(),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                      if (_searchCtrl.text.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.clear,
+                            color: Color(0xFF6B7280),
+                          ),
+                          onPressed: () => setState(() => _searchCtrl.clear()),
+                        ),
+                      Container(
+                        width: 1,
+                        height: 24,
+                        color: const Color(0xFFE5E7EB),
+                      ),
+                      IconButton(
+                        onPressed: _onSearch,
+                        icon: const Icon(
+                          Icons.search,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            //---------------------------------------------------------------------
-            // CATEGORIES
-            //---------------------------------------------------------------------
-            Text('Categories', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Expanded(
-              child: GridView.builder(
-                itemCount: MockDatabase.categories.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 4/ 3,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
+
+                const SizedBox(height: 20),
+
+                // ------------------------ QUICK SEARCH ------------------------
+                const Text(
+                  "Quick Search",
+                  style: TextStyle(
+                    fontFamily: "Inter",
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Color(0xFF3D3D3D),
+                  ),
                 ),
-                itemBuilder: (context, idx) {
-                  final cat = MockDatabase.categories[idx];
-                  return CategoryCard(
-                    title: cat['name'] ?? '',
-                    imagePath: cat['imagePath'],
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            SearchPage(initialQuery: cat['name'] ?? ''),
+                const SizedBox(height: 12),
+
+                // Quick Search Chips with Scroll Arrow
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 42,
+                        child: ListView.separated(
+                          controller: _chipScrollCtrl,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: MockDatabase.quickSearches.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 10),
+                          itemBuilder: (context, index) {
+                            final q = MockDatabase.quickSearches[index];
+                            return GestureDetector(
+                              onTap: () => _onQuickTap(q),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2563EB),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Text(
+                                  q,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: "Inter",
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-            //---------------------------------------------------------------------
-            // FOOTER
-            //---------------------------------------------------------------------
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(''),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LegalPage()),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 48,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        splashRadius: 22,
+                        icon: const Icon(
+                          Icons.chevron_right,
+                          color: Color(0xFF6B7280),
+                        ),
+                        onPressed: () => _scrollChips(true),
+                      ),
                     ),
-                    child: const Text('Legal'),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // ------------------------ CATEGORIES ------------------------
+                const Text(
+                  "Categories",
+                  style: TextStyle(
+                    fontFamily: "Inter",
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Color(0xFF3D3D3D),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+
+                // Categories Grid - Using shrinkWrap instead of Expanded
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: MockDatabase.categories.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 4 / 3,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                  ),
+                  itemBuilder: (context, idx) {
+                    final cat = MockDatabase.categories[idx];
+                    return CategoryCard(
+                      title: cat['name'] ?? '',
+                      imagePath: cat['imagePath'],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              SearchPage(initialQuery: cat['name'] ?? ''),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // ------------------------ FOOTER ------------------------
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LegalPage()),
+                        );
+                      },
+                      child: const Text(
+                        "Legal",
+                        style: TextStyle(
+                          fontFamily: "Inter",
+                          color: Color(0xFF2563EB),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
