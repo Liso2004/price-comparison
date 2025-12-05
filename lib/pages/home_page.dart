@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                                 child: Text(
                                   q,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: Color.fromARGB(255, 23, 22, 22),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
