@@ -5,8 +5,10 @@ import 'search_page.dart';
 import 'legal_page.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -29,6 +31,8 @@ class _HomePageState extends State<HomePage> {
 
   void _onSearch() {
     final text = _searchCtrl.text.trim();
+    if (text.isEmpty) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: text)),
@@ -42,87 +46,150 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Scroll helper
   void _scrollChips(bool forward) {
     const double amount = 120;
-    if (forward) {
-      _chipScrollCtrl.animateTo(
-        _chipScrollCtrl.offset + amount,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    } else {
-      _chipScrollCtrl.animateTo(
-        _chipScrollCtrl.offset - amount,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    }
+    _chipScrollCtrl.animateTo(
+      _chipScrollCtrl.offset + (forward ? amount : -amount),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Use scaffold background color for arrow container so it blends nicely
-    final bg = Theme.of(context).scaffoldBackgroundColor;
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ---------------- SEARCH BAR ----------------
-            Row(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Search products, e.g. "Milk"',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchCtrl.text.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () => setState(() => _searchCtrl.clear()),
-                            ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ),
+                // ------------------------ LOGO ------------------------
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1,
                     ),
-                    onSubmitted: (_) => _onSearch(),
-                    onChanged: (_) => setState(() {}),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 44,
+                        offset: Offset(2, 0),
+                      ),
+                    ],
+                  ),
+                  height: 60,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/logo.png',
+                          height: 40,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'ShopeWise',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 22,
+                              color: Color(0xFF2563EB),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _onSearch,
-                  child: const Row(
+                const SizedBox(height: 16),
+
+                // ------------------------ SEARCH BAR ------------
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
                     children: [
-                      Icon(Icons.search),
-                      SizedBox(width: 6),
-                      Text('Search'),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'Search for products....',
+                            hintStyle: TextStyle(
+                              fontFamily: "Inter",
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontFamily: "Inter",
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                          onSubmitted: (_) => _onSearch(),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                      if (_searchCtrl.text.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.clear,
+                            color: Color(0xFF6B7280),
+                          ),
+                          onPressed: () => setState(() => _searchCtrl.clear()),
+                        ),
+                      Container(
+                        width: 1,
+                        height: 24,
+                        color: const Color(0xFFE5E7EB),
+                      ),
+                      IconButton(
+                        onPressed: _onSearch,
+                        icon: const Icon(
+                          Icons.search,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                     ],
                   ),
                 ),
-              ],
-            ),
 
-            const SizedBox(height: 18),
-
-            // ---------------- QUICK SEARCH TITLE ----------------
+                const SizedBox(height: 20),
+              
+                // ---------------- QUICK SEARCH TITLE ----------------
             Text(
               'Quick Search',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-
-            const SizedBox(height: 8),
-
+            const SizedBox(height:8 ),
             //  QUICK SEARCH ----------------
-
             Row(
               children: [
                 Expanded(
@@ -162,16 +229,14 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ),
-                ), 
-
+                ),
                 const SizedBox(width: 8),
-
                 // Arrow container
                 Container(
                   width: 48,
-                  height: 40,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: bg,
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -190,54 +255,74 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 18),
 
-            // ---------------- CATEGORIES ----------------
-            Text('Categories', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Expanded(
-              child: GridView.builder(
-                itemCount: MockDatabase.categories.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 3 / 1.2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
+                // ------------------------ CATEGORIES ------------------------
+                const Text(
+                  "Categories",
+                  style: TextStyle(
+                    fontFamily: "Inter",
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Color(0xFF3D3D3D),
+                  ),
                 ),
-                itemBuilder: (context, idx) {
-                  final cat = MockDatabase.categories[idx];
-                  return CategoryCard(
-                    title: cat['name']!,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SearchPage(initialQuery: cat['name']!),
+                const SizedBox(height: 12),
+
+                // Categories Grid - Using shrinkWrap instead of Expanded
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: MockDatabase.categories.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 4 / 3,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                  ),
+                  itemBuilder: (context, idx) {
+                    final cat = MockDatabase.categories[idx];
+                    return CategoryCard(
+                      title: cat['name'] ?? '',
+                      imagePath: cat['imagePath'],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              SearchPage(initialQuery: cat['name'] ?? ''),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // ------------------------ FOOTER ------------------------
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LegalPage()),
+                        );
+                      },
+                      child: const Text(
+                        "Legal",
+                        style: TextStyle(
+                          fontFamily: "Inter",
+                          color: Color(0xFF2563EB),
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-
-            // ---------------- FOOTER ----------------
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Data shown is mock/demo only. '),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => LegalPage()),
-                    ),
-                    child: const Text('Legal'),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
