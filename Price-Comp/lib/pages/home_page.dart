@@ -3,6 +3,7 @@ import '../data/mock_database.dart';
 import '../widgets/category_card.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
+
 //comment
 class HomePage extends StatefulWidget {
   final void Function(String)? onNavigateToSearch;
@@ -107,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Text(
-                            'ShopeWise',
+                            'ShopWise',
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w700,

@@ -75,6 +75,17 @@ class _SearchPageState extends State<SearchPage> {
 
   // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
+    final query = _cleanQuery(_ctrl.text); // Use the helper here
+
+    // If query is empty after cleaning, clear results and return
+    if (query.isEmpty) {
+      setState(() {
+        _results = [];
+        _loading = false;
+      });
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -398,14 +409,34 @@ class _SearchPageState extends State<SearchPage> {
                     // sit on the page background and do not overlap chip text)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: ListView.separated(
-                        controller: _quickScrollCtrl,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: MockDatabase.quickSearches.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 10),
-                        itemBuilder: (context, index) =>
-                            _quickChip(MockDatabase.quickSearches[index]),
-                      ),
+                      child: MockDatabase.quickSearches.isEmpty
+                          ? Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 18,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'No quick searches',
+                                    style: TextStyle(color: Color(0xFF6B7280)),
+                                  ),
+                                  // TODO: connect API to populate quick searches
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              controller: _quickScrollCtrl,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: MockDatabase.quickSearches.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 10),
+                              itemBuilder: (context, index) =>
+                                  _quickChip(MockDatabase.quickSearches[index]),
+                            ),
                     ),
 
                     // LEFT ARROW
