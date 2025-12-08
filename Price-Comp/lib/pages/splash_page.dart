@@ -208,7 +208,7 @@ class _SplashPageState extends State<SplashPage>
                                     child: ScaleTransition(
                                       scale: _logoScale,
                                       child: Image.asset(
-                                        'assets/images/Logo.png',
+                                        'assets/images/logo.png',
                                         width:
                                             MediaQuery.of(context).size.width *
                                             0.65,

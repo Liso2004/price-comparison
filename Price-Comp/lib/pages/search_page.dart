@@ -3,10 +3,10 @@ import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_placeholder.dart';
-import '../app/main_scaffold.dart';
 import 'comparison_page.dart';
 import '../widgets/filter_page.dart';
 import '../widgets/recommended_products_horizontal.dart';
+import '../app/main_scaffold.dart';
 
 // --- Styling Constants ---
 const Color _primaryColor = Color(0xFF2563EB);
@@ -40,6 +40,12 @@ class _SearchPageState extends State<SearchPage> {
   final ScrollController _quickScrollCtrl = ScrollController();
   bool _showLeftArrow = false;
   bool _showRightArrow = true;
+
+  // === ADD THE CLEAN QUERY METHOD HERE ===
+  String _cleanQuery(String query) {
+    // Trim, lowercase, and collapse multiple spaces
+    return query.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
 
   @override
   void initState() {
@@ -75,6 +81,17 @@ class _SearchPageState extends State<SearchPage> {
 
   // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
+    final query = _cleanQuery(_ctrl.text); // Use the helper here
+
+    // If query is empty after cleaning, clear results and return
+    if (query.isEmpty) {
+      setState(() {
+        _results = [];
+        _loading = false;
+      });
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -82,7 +99,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
-      final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
+      final res = await MockDatabase.searchProducts(query, fail: fail);
       List<Product> withPrices = res;
 
       // Apply category filter
@@ -116,25 +133,8 @@ class _SearchPageState extends State<SearchPage> {
   void _onProductTap(Product p) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ComparisonPage(
-          product: p,
-          initialRetailerId: p.retailerId, // NEW: Pass retailer ID from product
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => ComparisonPage(product: p)),
     );
-  }
-
-  /// Get retailer ID for a product (matches ProductCard's display logic)
-  String _getRetailerIdForProduct(String productId) {
-    const retailers = [
-      'r2',
-      'r1',
-      'r3',
-      'r4',
-    ]; // Checkers, Pick n Pay, Woolworths, Shoprite
-    final index = productId.hashCode % retailers.length;
-    return retailers[index];
   }
 
   /// Sorts results based on selected sort type
@@ -398,14 +398,34 @@ class _SearchPageState extends State<SearchPage> {
                     // sit on the page background and do not overlap chip text)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: ListView.separated(
-                        controller: _quickScrollCtrl,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: MockDatabase.quickSearches.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 10),
-                        itemBuilder: (context, index) =>
-                            _quickChip(MockDatabase.quickSearches[index]),
-                      ),
+                      child: MockDatabase.quickSearches.isEmpty
+                          ? Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 18,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'No quick searches',
+                                    style: TextStyle(color: Color(0xFF6B7280)),
+                                  ),
+                                  // TODO: connect API to populate quick searches
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              controller: _quickScrollCtrl,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: MockDatabase.quickSearches.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 10),
+                              itemBuilder: (context, index) =>
+                                  _quickChip(MockDatabase.quickSearches[index]),
+                            ),
                     ),
 
                     // LEFT ARROW

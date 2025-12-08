@@ -4,6 +4,7 @@ import '../pages/search_page.dart';
 import '../pages/compare_placeholder_page.dart';
 import '../pages/settings_page.dart';
 
+//comment
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
   @override
@@ -12,23 +13,10 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
-  late final List<Widget> pages;
+  String _searchInitialQuery = '';
   @override
   void initState() {
     super.initState();
-    pages = <Widget>[
-      HomePage(),
-      SearchPage(),
-      ComparePlaceholderPage(
-        onHomePressed: () {
-          debugPrint(
-            '[MainScaffold] Home button callback triggered, switching to index 0',
-          );
-          setState(() => _currentIndex = 0);
-        },
-      ),
-      SettingsPage(),
-    ];
     debugPrint('[MainScaffold] started');
   }
 
@@ -41,6 +29,27 @@ class _MainScaffoldState extends State<MainScaffold> {
   void _onTap(int idx) => setState(() => _currentIndex = idx);
   @override
   Widget build(BuildContext context) {
+    // Recreate pages here so we can pass a dynamic initial query
+    final pages = <Widget>[
+      HomePage(
+        onNavigateToSearch: (q) {
+          setState(() {
+            _searchInitialQuery = q;
+            _currentIndex = 1;
+          });
+        },
+      ),
+      SearchPage(initialQuery: _searchInitialQuery),
+      ComparePlaceholderPage(
+        onHomePressed: () {
+          debugPrint(
+            '[MainScaffold] Home button callback triggered, switching to index 0',
+          );
+          setState(() => _currentIndex = 0);
+        },
+      ),
+      SettingsPage(),
+    ];
     return Scaffold(
       body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
