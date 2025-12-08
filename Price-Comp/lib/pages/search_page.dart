@@ -41,6 +41,12 @@ class _SearchPageState extends State<SearchPage> {
   bool _showLeftArrow = false;
   bool _showRightArrow = true;
 
+  // === ADD THE CLEAN QUERY METHOD HERE ===
+  String _cleanQuery(String query) {
+    // Trim, lowercase, and collapse multiple spaces
+    return query.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
   @override
   void initState() {
     super.initState();
