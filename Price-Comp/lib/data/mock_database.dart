@@ -123,12 +123,8 @@ class MockDatabase {
       size: '500ml',
       category: 'Groceries',
     ),
-<<<<<<< HEAD
 
     // ---------- Health & Wellness----------
-=======
-    // ---------- BAKERY ----------
->>>>>>> aff1ace393ac5eb520bca78c7e9928f92fcafcf3
     Product(id: 'p19', name: 'Large Eggs', size: '12 pack', category: 'Bakery'),
     Product(
       id: 'p20',
@@ -171,12 +167,8 @@ class MockDatabase {
       size: '750g',
       category: 'Health & Wellness',
     ),
-<<<<<<< HEAD
 
     // ---------- Stationery ----------
-=======
-    // ---------- MEAT ----------
->>>>>>> aff1ace393ac5eb520bca78c7e9928f92fcafcf3
     Product(id: 'p31', name: 'Chicken Breast', size: '1kg', category: 'Meat'),
     Product(id: 'p32', name: 'Chicken Thighs', size: '500g', category: 'Meat'),
     Product(id: 'p33', name: 'Whole Chicken', size: '1.5kg', category: 'Meat'),
@@ -230,12 +222,8 @@ class MockDatabase {
       size: '100ml',
       category: 'Personal Care',
     ),
-<<<<<<< HEAD
 
     // ----------Cleaning &  HOUSEHOLD ----------
-=======
-    // ---------- HOUSEHOLD ----------
->>>>>>> aff1ace393ac5eb520bca78c7e9928f92fcafcf3
     Product(
       id: 'p43',
       name: 'Dishwasher Tablets',
