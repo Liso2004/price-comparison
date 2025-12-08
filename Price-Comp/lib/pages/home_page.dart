@@ -3,7 +3,7 @@ import '../data/mock_database.dart';
 import '../widgets/category_card.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
-
+//comment
 class HomePage extends StatefulWidget {
   final void Function(String)? onNavigateToSearch;
   const HomePage({super.key, this.onNavigateToSearch});
