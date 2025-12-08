@@ -259,8 +259,8 @@ class MockDatabase {
     Product(id: 'p49', name: 'Coca-Cola 2L', size: '2L', category: 'Beverages'),
     Product(
       id: 'p50',
-      name: 'Potatoes 2kg',
-      size: '2kg',
+      name: 'Potatoes 1kg',
+      size: '1kg',
       category: 'Groceries',
     ),
     Product(
