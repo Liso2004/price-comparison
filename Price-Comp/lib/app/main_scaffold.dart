@@ -3,7 +3,6 @@ import '../pages/home_page.dart';
 import '../pages/search_page.dart';
 import '../pages/compare_placeholder_page.dart';
 import '../pages/settings_page.dart';
-
 //comment
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -50,6 +49,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       SettingsPage(),
     ];
+
     return Scaffold(
       body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(

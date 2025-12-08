@@ -2,291 +2,26 @@ import '../models/product.dart';
 import '../models/retailer_price.dart';
 
 class MockDatabase {
-  static List<String> quickSearches = [
-    'Milk',
-    'Rice',
-    'Dishwasher',
-    'Toothpaste',
-    'Olive Oil',
-    'Chicken',
-    'Bread',
-    'Eggs',
-    'Bananas',
-    'Coke',
-    'Potatoes',
-    'Rice 1kg',
-  ];
-  static List<Map<String, String>> categories = [
-    {
-      'id': 'cat1',
-      'name': 'Electronics',
-      'imagePath': 'assets/images/electronics.jpg',
-    },
-    {
-      'id': 'cat2',
-      'name': 'Groceries',
-      'imagePath': 'assets/images/groceries.jpg',
-    },
-    {
-      'id': 'cat3',
-      'name': 'Cleaning & Household',
-      'imagePath': 'assets/images/cleaning.jpg',
-    },
-    {
-      'id': 'cat4',
-      'name': 'Personal Care',
-      'imagePath': 'assets/images/personal-care.jpg',
-    },
-    {'id': 'cat5', 'name': 'Health & Wellness', 'imagePath': 'assets/images/health.jpg'},
-    {'id': 'cat6', 'name': 'Stationery', 'imagePath': 'assets/images/stationery.jpg'},
-    // {'id': 'cat7', 'name': 'Snacks', 'imagePath': 'assets/images/snacks.jpg'},
-    // todo when i come from the shop , remove snack products and change image links 
-  ];
-  static List<Product> products = [
-    // ---------- Electronics , really doesnt matter that its beverages ----------
-    Product(
-      id: 'p1',
-      name: 'Full Cream Milk',
-      size: '2L',
-      category: 'Electronics',
-    ),
-    Product(id: 'p2', name: 'Low Fat Milk', size: '1L', category: 'Beverages'),
-    Product(
-      id: 'p3',
-      name: 'Full Cream Milk',
-      size: '1L',
-      category: 'Electronics',
-    ),
-    Product(id: 'p4', name: 'Organic Milk', size: '2L', category: 'Beverages'),
-    Product(
-      id: 'p5',
-      name: 'Lactose Free Milk',
-      size: '1L',
-      category: 'Electronics',
-    ),
-    Product(
-      id: 'p6',
-      name: 'Flavored Milk',
-      size: '500ml',
-      category: 'Electronics',
-    ),
-    // ---------- GROCERIES ----------
-    Product(
-      id: 'p7',
-      name: 'Long Grain Rice',
-      size: '1kg',
-      category: 'Groceries',
-    ),
-    Product(id: 'p8', name: 'Basmati Rice', size: '2kg', category: 'Groceries'),
-    Product(id: 'p9', name: 'Brown Rice', size: '1kg', category: 'Groceries'),
-    Product(
-      id: 'p10',
-      name: 'Jasmine Rice',
-      size: '1kg',
-      category: 'Groceries',
-    ),
-    Product(id: 'p11', name: 'Wild Rice', size: '500g', category: 'Groceries'),
-    Product(id: 'p12', name: 'Sushi Rice', size: '1kg', category: 'Groceries'),
-    Product(
-      id: 'p13',
-      name: 'Extra Virgin Olive Oil',
-      size: '500ml',
-      category: 'Groceries',
-    ),
-    Product(
-      id: 'p14',
-      name: 'Pure Olive Oil',
-      size: '750ml',
-      category: 'Groceries',
-    ),
-    Product(
-      id: 'p15',
-      name: 'Light Olive Oil',
-      size: '1L',
-      category: 'Groceries',
-    ),
-    Product(
-      id: 'p16',
-      name: 'Organic Olive Oil',
-      size: '500ml',
-      category: 'Groceries',
-    ),
-    Product(
-      id: 'p17',
-      name: 'Cold Pressed Olive Oil',
-      size: '250ml',
-      category: 'Groceries',
-    ),
-    Product(
-      id: 'p18',
-      name: 'Flavored Olive Oil',
-      size: '500ml',
-      category: 'Groceries',
-    ),
+  // NOTE: Removed hardcoded mock quick-searches. Replace with API data.
+  // TODO: connect API to populate quickSearches
+  static List<String> quickSearches = [];
 
-    // ---------- Health & Wellness----------
-    Product(id: 'p19', name: 'Large Eggs', size: '12 pack', category: 'Bakery'),
-    Product(
-      id: 'p20',
-      name: 'Free Range Eggs',
-      size: '6 pack',
-      category: 'Heath & Wellness',
-    ),
-    Product(
-      id: 'p21',
-      name: 'Organic Eggs',
-      size: '12 pack',
-      category: 'Health & Wellness',
-    ),
-    Product(id: 'p22', name: 'Jumbo Eggs', size: '18 pack', category: 'Bakery'),
-    Product(id: 'p23', name: 'Brown Eggs', size: '12 pack', category: 'Bakery'),
-    Product(id: 'p24', name: 'Quail Eggs', size: '24 pack', category: 'Bakery'),
-    Product(id: 'p25', name: 'White Bread', size: '700g', category: 'Bakery'),
-    Product(
-      id: 'p26',
-      name: 'Whole Wheat Bread',
-      size: '600g',
-      category: 'Health & Wellness',
-    ),
-    Product(id: 'p27', name: 'Rye Bread', size: '500g', category: 'Bakery'),
-    Product(
-      id: 'p28',
-      name: 'Gluten Free Bread',
-      size: '400g',
-      category: 'Health & Wellness',
-    ),
-    Product(
-      id: 'p29',
-      name: 'Sourdough Bread',
-      size: '800g',
-      category: 'Heath & Wellness',
-    ),
-    Product(
-      id: 'p30',
-      name: 'Multigrain Bread',
-      size: '750g',
-      category: 'Health & Wellness',
-    ),
+  // ---------------------- UPDATED WITH IMAGES ----------------------
+  // NOTE: Removed hardcoded categories. Replace with API data.
+  // TODO: connect API to populate categories
+  static List<Map<String, String>> categories = [];
 
-    // ---------- Stationery ----------
-    Product(id: 'p31', name: 'Chicken Breast', size: '1kg', category: 'Meat'),
-    Product(id: 'p32', name: 'Chicken Thighs', size: '500g', category: 'Meat'),
-    Product(id: 'p33', name: 'Whole Chicken', size: '1.5kg', category: 'Meat'),
-    Product(id: 'p34', name: 'Chicken Wings', size: '1kg', category: 'Meat'),
-    Product(
-      id: 'p35',
-      name: 'Chicken Drumsticks',
-      size: '800g',
-      category: 'Stationery',
-    ),
-    Product(
-      id: 'p36',
-      name: 'Free Range Chicken',
-      size: '1.2kg',
-      category: 'Stationery',
-    ),
-    // ---------- PERSONAL CARE ----------
-    Product(
-      id: 'p37',
-      name: 'Fluoride Toothpaste',
-      size: '100ml',
-      category: 'Personal Care',
-    ),
-    Product(
-      id: 'p38',
-      name: 'Whitening Toothpaste',
-      size: '75ml',
-      category: 'Personal Care',
-    ),
-    Product(
-      id: 'p39',
-      name: 'Sensitive Teeth Paste',
-      size: '90ml',
-      category: 'Personal Care',
-    ),
-    Product(
-      id: 'p40',
-      name: 'Natural Toothpaste',
-      size: '120ml',
-      category: 'Personal Care',
-    ),
-    Product(
-      id: 'p41',
-      name: "Children's Toothpaste",
-      size: '50ml',
-      category: 'Personal Care',
-    ),
-    Product(
-      id: 'p42',
-      name: 'Charcoal Toothpaste',
-      size: '100ml',
-      category: 'Personal Care',
-    ),
+  // NOTE: Removed all hardcoded products. Replace with API data.
+  // TODO: connect API to populate products
+  static List<Product> products = [];
 
-    // ----------Cleaning &  HOUSEHOLD ----------
-    Product(
-      id: 'p43',
-      name: 'Dishwasher Tablets',
-      size: '30 tablets',
-      category: 'Household',
-    ),
-    Product(
-      id: 'p44',
-      name: 'Dishwasher Salt',
-      size: '2kg',
-      category: 'Household',
-    ),
-    Product(
-      id: 'p45',
-      name: 'Dishwasher Liquid',
-      size: '1L',
-      category: 'Household',
-    ),
-    Product(id: 'p46', name: 'Rinse Aid', size: '500ml', category: 'Household'),
-    Product(
-      id: 'p47',
-      name: 'Eco Dishwasher Powder',
-      size: '1kg',
-      category: 'Household',
-    ),
-    Product(
-      id: 'p48',
-      name: 'All-in-One Dishwasher',
-      size: '40 tablets',
-      category: 'Household',
-    ),
-    // ---------- EXTRA ----------
-    Product(id: 'p49', name: 'Coca-Cola 2L', size: '2L', category: 'Beverages'),
-    Product(
-      id: 'p50',
-      name: 'Potatoes 1kg',
-      size: '1kg',
-      category: 'Groceries',
-    ),
-    Product(
-      id: 'p51',
-      name: 'Sunflower Oil 2L',
-      size: '2L',
-      category: 'Groceries',
-    ),
-    // Product(id: 'p52', name: 'Savoury Chips', size: '150g', category: 'Snacks'),
-  ];
-  static List<Map<String, String>> retailers = [
-    {'id': 'r1', 'name': 'Pick n Pay'},
-    {'id': 'r2', 'name': 'Checkers'},
-    {'id': 'r3', 'name': 'Woolworths'},
-    {'id': 'r4', 'name': 'Shoprite'},
-  ];
-  // NEW: Map of retailer IDs to their base URLs
-  static final Map<String, String> retailerBaseUrls = {
-    'r1': 'https://www.pnp.co.za',
-    'r2': 'https://www.checkers.co.za',
-    'r3': 'https://www.woolworths.co.za',
-    'r4': 'https://www.shoprite.co.za',
-  };
+  // TODO: replace with real retailers endpoint
+  static List<Map<String, String>> retailers = [];
+
   static double getMockPrice(String productId) {
-    final n = int.tryParse(productId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-    return 10 + (n * 1.75) % 120;
+    // TODO: connect API to return real prices
+    // While API is not connected, return 0.0 to avoid displaying fake data
+    return 0.0;
   }
 
   // NEW METHOD: Get products with retailer information
@@ -320,21 +55,11 @@ class MockDatabase {
     int delayMs = 600,
     bool fail = false,
   }) async {
+    // TODO: connect to backend search API and remove this mock implementation
     await Future.delayed(Duration(milliseconds: delayMs));
     if (fail) throw Exception('Network error (mock)');
-    if (query.trim().isEmpty) return [];
-    final q = query.toLowerCase();
-    // Get all products with retailer variants
-    final allProductsWithRetailers = getProductsWithRetailers();
-    // Filter based on search query
-    return allProductsWithRetailers
-        .where(
-          (p) =>
-              p.name.toLowerCase().contains(q) ||
-              p.category.toLowerCase().contains(q) ||
-              p.size.toLowerCase().contains(q),
-        )
-        .toList();
+    // Current implementation returns no results until API is connected
+    return [];
   }
 
   static Future<List<RetailerPrice>> getComparison(
@@ -343,37 +68,10 @@ class MockDatabase {
     bool fail = false,
     bool partial = false,
   }) async {
+    // TODO: connect to comparison API
     await Future.delayed(Duration(milliseconds: delayMs));
-    if (fail) {
-      throw Exception("Network failed to load product comparison");
-    }
-    List<RetailerPrice> list = [];
-    for (var r in retailers) {
-      final id = r['id']!;
-      final name = r['name']!;
-      final base = getMockPrice(productId);
-      double p = (base + (base * (id.hashCode % 7) / 100)).clamp(5.0, 999.0);
-      final productUrl = retailerBaseUrls[id] ?? 'https://www.google.com';
-      if (partial && id == 'r3') {
-        list.add(
-          RetailerPrice(
-            retailerId: id,
-            retailerName: name,
-            price: null,
-            productUrl: productUrl,
-          ),
-        );
-      } else {
-        list.add(
-          RetailerPrice(
-            retailerId: id,
-            retailerName: name,
-            price: double.parse(p.toStringAsFixed(2)),
-            productUrl: productUrl,
-          ),
-        );
-      }
-    }
-    return list;
+    if (fail) throw Exception("Network failed to load product comparison");
+    // Return empty list until API is connected to avoid showing fake data
+    return [];
   }
 }
