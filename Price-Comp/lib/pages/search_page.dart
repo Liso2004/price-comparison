@@ -3,10 +3,10 @@ import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_placeholder.dart';
+import '../app/main_scaffold.dart';
 import 'comparison_page.dart';
 import '../widgets/filter_page.dart';
 import '../widgets/recommended_products_horizontal.dart';
-import '../app/main_scaffold.dart';
 
 // --- Styling Constants ---
 const Color _primaryColor = Color(0xFF2563EB);
@@ -40,12 +40,6 @@ class _SearchPageState extends State<SearchPage> {
   final ScrollController _quickScrollCtrl = ScrollController();
   bool _showLeftArrow = false;
   bool _showRightArrow = true;
-
-  // === ADD THE CLEAN QUERY METHOD HERE ===
-  String _cleanQuery(String query) {
-    // Trim, lowercase, and collapse multiple spaces
-    return query.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
-  }
 
   @override
   void initState() {
@@ -81,17 +75,6 @@ class _SearchPageState extends State<SearchPage> {
 
   // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
-    final query = _cleanQuery(_ctrl.text); // Use the helper here
-  
-  // If query is empty after cleaning, clear results and return
-  if (query.isEmpty) {
-    setState(() {
-      _results = [];
-      _loading = false;
-    });
-    return;
-  }
-
     setState(() {
       _loading = true;
       _error = null;
@@ -99,7 +82,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
-      final res = await MockDatabase.searchProducts(query, fail: fail);
+      final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
       List<Product> withPrices = res;
 
       // Apply category filter
@@ -133,8 +116,25 @@ class _SearchPageState extends State<SearchPage> {
   void _onProductTap(Product p) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ComparisonPage(product: p)),
+      MaterialPageRoute(
+        builder: (_) => ComparisonPage(
+          product: p,
+          initialRetailerId: p.retailerId, // NEW: Pass retailer ID from product
+        ),
+      ),
     );
+  }
+
+  /// Get retailer ID for a product (matches ProductCard's display logic)
+  String _getRetailerIdForProduct(String productId) {
+    const retailers = [
+      'r2',
+      'r1',
+      'r3',
+      'r4',
+    ]; // Checkers, Pick n Pay, Woolworths, Shoprite
+    final index = productId.hashCode % retailers.length;
+    return retailers[index];
   }
 
   /// Sorts results based on selected sort type
@@ -634,13 +634,12 @@ class _SearchPageState extends State<SearchPage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                         // Always push the home screen and remove all previous routes
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const MainScaffold()), // Your home widget
-                                            (route) => false, // Remove all existing routes
-                                          );
-                                        },
+                                        // Navigate back to the first route (MainScaffold) and pop the search page
+                                        Navigator.popUntil(
+                                          context,
+                                          (route) => route.isFirst,
+                                        );
+                                      },
                                       child: const Text(
                                         'Home',
                                         style: TextStyle(
@@ -662,15 +661,17 @@ class _SearchPageState extends State<SearchPage> {
                           ),
                         ),
                       )
-                     : Container(
-                      padding: const EdgeInsets.all(16.0),
-                      child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3, // 3 items per row
-                            crossAxisSpacing: 1,
-                            mainAxisSpacing: 1,
-                            childAspectRatio: 0.70, // Adjust this for card proportions
-                          ),
+                    : Container(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3, // 3 items per row
+                                crossAxisSpacing: 1,
+                                mainAxisSpacing: 1,
+                                childAspectRatio:
+                                    0.70, // Adjust this for card proportions
+                              ),
                           itemCount: _results.length,
                           itemBuilder: (context, idx) {
                             final p = _results[idx];
@@ -682,7 +683,7 @@ class _SearchPageState extends State<SearchPage> {
                             );
                           },
                         ),
-                    ),
+                      ),
               ),
             ],
           ),
