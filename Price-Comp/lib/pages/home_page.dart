@@ -302,7 +302,7 @@ class _HomePageState extends State<HomePage> {
 
                 // ------------------------ CATEGORIES ------------------------
                 const Text(
-                  "Categories",
+                  "Product Categories",
                   style: TextStyle(
                     fontFamily: "Inter",
                     fontWeight: FontWeight.w600,
