@@ -3,9 +3,10 @@ import '../data/mock_database.dart';
 import '../widgets/category_card.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
-
+//comment
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final void Function(String)? onNavigateToSearch;
+  const HomePage({super.key, this.onNavigateToSearch});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -33,6 +34,11 @@ class _HomePageState extends State<HomePage> {
     final text = _searchCtrl.text.trim();
     if (text.isEmpty) return;
 
+    if (widget.onNavigateToSearch != null) {
+      widget.onNavigateToSearch!(text);
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: text)),
@@ -40,6 +46,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onQuickTap(String q) {
+    if (widget.onNavigateToSearch != null) {
+      widget.onNavigateToSearch!(q);
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: q)),
@@ -295,13 +306,19 @@ class _HomePageState extends State<HomePage> {
                     return CategoryCard(
                       title: cat['name'] ?? '',
                       imagePath: cat['imagePath'],
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              SearchPage(initialQuery: cat['name'] ?? ''),
-                        ),
-                      ),
+                      onTap: () {
+                        final name = cat['name'] ?? '';
+                        if (widget.onNavigateToSearch != null) {
+                          widget.onNavigateToSearch!(name);
+                          return;
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SearchPage(initialQuery: name),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
