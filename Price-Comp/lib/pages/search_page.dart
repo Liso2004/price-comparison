@@ -82,15 +82,15 @@ class _SearchPageState extends State<SearchPage> {
   // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
     final query = _cleanQuery(_ctrl.text); // Use the helper here
-  
-  // If query is empty after cleaning, clear results and return
-  if (query.isEmpty) {
-    setState(() {
-      _results = [];
-      _loading = false;
-    });
-    return;
-  }
+
+    // If query is empty after cleaning, clear results and return
+    if (query.isEmpty) {
+      setState(() {
+        _results = [];
+        _loading = false;
+      });
+      return;
+    }
 
     setState(() {
       _loading = true;
@@ -398,14 +398,34 @@ class _SearchPageState extends State<SearchPage> {
                     // sit on the page background and do not overlap chip text)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: ListView.separated(
-                        controller: _quickScrollCtrl,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: MockDatabase.quickSearches.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 10),
-                        itemBuilder: (context, index) =>
-                            _quickChip(MockDatabase.quickSearches[index]),
-                      ),
+                      child: MockDatabase.quickSearches.isEmpty
+                          ? Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 18,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'No quick searches',
+                                    style: TextStyle(color: Color(0xFF6B7280)),
+                                  ),
+                                  // TODO: connect API to populate quick searches
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              controller: _quickScrollCtrl,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: MockDatabase.quickSearches.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 10),
+                              itemBuilder: (context, index) =>
+                                  _quickChip(MockDatabase.quickSearches[index]),
+                            ),
                     ),
 
                     // LEFT ARROW
@@ -634,13 +654,17 @@ class _SearchPageState extends State<SearchPage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                         // Always push the home screen and remove all previous routes
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const MainScaffold()), // Your home widget
-                                            (route) => false, // Remove all existing routes
-                                          );
-                                        },
+                                        // Always push the home screen and remove all previous routes
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const MainScaffold(),
+                                          ), // Your home widget
+                                          (route) =>
+                                              false, // Remove all existing routes
+                                        );
+                                      },
                                       child: const Text(
                                         'Home',
                                         style: TextStyle(
@@ -662,15 +686,17 @@ class _SearchPageState extends State<SearchPage> {
                           ),
                         ),
                       )
-                     : Container(
-                      padding: const EdgeInsets.all(16.0),
-                      child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3, // 3 items per row
-                            crossAxisSpacing: 1,
-                            mainAxisSpacing: 1,
-                            childAspectRatio: 0.70, // Adjust this for card proportions
-                          ),
+                    : Container(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3, // 3 items per row
+                                crossAxisSpacing: 1,
+                                mainAxisSpacing: 1,
+                                childAspectRatio:
+                                    0.70, // Adjust this for card proportions
+                              ),
                           itemCount: _results.length,
                           itemBuilder: (context, idx) {
                             final p = _results[idx];
@@ -682,7 +708,7 @@ class _SearchPageState extends State<SearchPage> {
                             );
                           },
                         ),
-                    ),
+                      ),
               ),
             ],
           ),

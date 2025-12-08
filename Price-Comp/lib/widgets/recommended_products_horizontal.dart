@@ -13,7 +13,12 @@ class RecommendedProductsHorizontal extends StatelessWidget {
 
   /// Get retailer ID for a product (matches ProductCard's display logic)
   String _getRetailerIdForProduct(String productId) {
-    const retailers = ['r2', 'r1', 'r3', 'r4']; // Checkers, Pick n Pay, Woolworths, Shoprite
+    const retailers = [
+      'r2',
+      'r1',
+      'r3',
+      'r4',
+    ]; // Checkers, Pick n Pay, Woolworths, Shoprite
     final index = productId.hashCode % retailers.length;
     return retailers[index];
   }
@@ -40,66 +45,88 @@ class RecommendedProductsHorizontal extends StatelessWidget {
 
         SizedBox(
           height: 175,
-          child: Stack(
-            children: [
-              // --- Horizontal product list ---
-              ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                itemCount: recommendedProducts.length,
-                itemBuilder: (context, index) {
-                  final product = recommendedProducts[index];
-                  final price = MockDatabase.getMockPrice(product.id);
-                  final retailerId = _getRetailerIdForProduct(product.id);
+          child: recommendedProducts.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.info_outline,
+                          size: 28,
+                          color: Color(0xFF6B7280),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No recommendations yet.',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                        // TODO: connect API to fetch recommended products
+                      ],
+                    ),
+                  ),
+                )
+              : Stack(
+                  children: [
+                    // --- Horizontal product list ---
+                    ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: recommendedProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = recommendedProducts[index];
+                        final price = MockDatabase.getMockPrice(product.id);
+                        final retailerId = _getRetailerIdForProduct(product.id);
 
-                  return Container(
-                    width: 130,
-                    margin: const EdgeInsets.only(right: 12),
-                    child: ProductCard(
-                      product: product,
-                      price: price,
-                      retailerId: retailerId,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ComparisonPage(
-                              product: product,
-                              initialRetailerId: retailerId,
-                            ),
+                        return Container(
+                          width: 130,
+                          margin: const EdgeInsets.only(right: 12),
+                          child: ProductCard(
+                            product: product,
+                            price: price,
+                            retailerId: retailerId,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ComparisonPage(
+                                    product: product,
+                                    initialRetailerId: retailerId,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
                     ),
-                  );
-                },
-              ),
 
-              // --- Left scroll arrow (SVG) ---
-              Positioned(
-                right: 0,
-                top: 70,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color.fromARGB(31, 158, 30, 30),
-                        blurRadius: 4,
+                    // --- Left scroll arrow (SVG) ---
+                    Positioned(
+                      right: 0,
+                      top: 70,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromARGB(31, 158, 30, 30),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 18,
+                          color: Color(0xFF2563EB),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-        Icons.arrow_forward_ios,   
-        size: 18,
-        color: Color(0xFF2563EB),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            ],
-          ),
         ),
       ],
     );
