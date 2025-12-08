@@ -1,55 +1,23 @@
 import '../models/product.dart';
 import '../models/retailer_price.dart';
-
 class MockDatabase {
   // NOTE: Removed hardcoded mock quick-searches. Replace with API data.
   // TODO: connect API to populate quickSearches
   static List<String> quickSearches = [];
-
   // ---------------------- UPDATED WITH IMAGES ----------------------
   // NOTE: Removed hardcoded categories. Replace with API data.
   // TODO: connect API to populate categories
   static List<Map<String, String>> categories = [];
-
   // NOTE: Removed all hardcoded products. Replace with API data.
   // TODO: connect API to populate products
   static List<Product> products = [];
-
   // TODO: replace with real retailers endpoint
   static List<Map<String, String>> retailers = [];
-
   static double getMockPrice(String productId) {
     // TODO: connect API to return real prices
     // While API is not connected, return 0.0 to avoid displaying fake data
     return 0.0;
   }
-
-  // NEW METHOD: Get products with retailer information
-  // This creates product variants for each retailer
-  static List<Product> getProductsWithRetailers() {
-    List<Product> productsWithRetailers = [];
-    for (var baseProduct in products) {
-      for (var retailer in retailers) {
-        final retailerId = retailer['id']!;
-        final productUrl =
-            '${retailerBaseUrls[retailerId]}/product/${baseProduct.id}';
-        productsWithRetailers.add(
-          Product(
-            id: baseProduct.id,
-            name: baseProduct.name,
-            size: baseProduct.size,
-            category: baseProduct.category,
-            image: baseProduct.image,
-            retailerId: retailerId,
-            productUrl: productUrl,
-          ),
-        );
-      }
-    }
-    return productsWithRetailers;
-  }
-
-  // UPDATED: Search now returns products WITH retailer information
   static Future<List<Product>> searchProducts(
     String query, {
     int delayMs = 600,
@@ -61,7 +29,6 @@ class MockDatabase {
     // Current implementation returns no results until API is connected
     return [];
   }
-
   static Future<List<RetailerPrice>> getComparison(
     String productId, {
     int delayMs = 900,
