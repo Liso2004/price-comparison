@@ -19,8 +19,8 @@ class MockDatabase {
   static List<Map<String, String>> categories = [
     {
       'id': 'cat1',
-      'name': 'Beverages',
-      'imagePath': 'assets/images/beverages.webp',
+      'name': 'Electronics',
+      'imagePath': 'assets/images/electronics.jpg',
     },
     {
       'id': 'cat2',
@@ -29,45 +29,46 @@ class MockDatabase {
     },
     {
       'id': 'cat3',
-      'name': 'Household',
-      'imagePath': 'assets/images/household.jpg',
+      'name': 'Cleaning & Household',
+      'imagePath': 'assets/images/cleaning.jpg',
     },
     {
       'id': 'cat4',
       'name': 'Personal Care',
       'imagePath': 'assets/images/personal-care.jpg',
     },
-    {'id': 'cat5', 'name': 'Bakery', 'imagePath': 'assets/images/bakery.jpg'},
-    {'id': 'cat6', 'name': 'Meat', 'imagePath': 'assets/images/meat.jpg'},
-    {'id': 'cat7', 'name': 'Snacks', 'imagePath': 'assets/images/snacks.jpg'},
+    {'id': 'cat5', 'name': 'Health & Wellness', 'imagePath': 'assets/images/health.jpg'},
+    {'id': 'cat6', 'name': 'Stationery', 'imagePath': 'assets/images/stationery.jpg'},
+    // {'id': 'cat7', 'name': 'Snacks', 'imagePath': 'assets/images/snacks.jpg'},
+    // todo when i come from the shop , remove snack products and change image links 
   ];
   static List<Product> products = [
-    // ---------- BEVERAGES ----------
+    // ---------- Electronics , really doesnt matter that its beverages ----------
     Product(
       id: 'p1',
       name: 'Full Cream Milk',
       size: '2L',
-      category: 'Beverages',
+      category: 'Electronics',
     ),
     Product(id: 'p2', name: 'Low Fat Milk', size: '1L', category: 'Beverages'),
     Product(
       id: 'p3',
       name: 'Full Cream Milk',
       size: '1L',
-      category: 'Beverages',
+      category: 'Electronics',
     ),
     Product(id: 'p4', name: 'Organic Milk', size: '2L', category: 'Beverages'),
     Product(
       id: 'p5',
       name: 'Lactose Free Milk',
       size: '1L',
-      category: 'Beverages',
+      category: 'Electronics',
     ),
     Product(
       id: 'p6',
       name: 'Flavored Milk',
       size: '500ml',
-      category: 'Beverages',
+      category: 'Electronics',
     ),
     // ---------- GROCERIES ----------
     Product(
@@ -122,19 +123,20 @@ class MockDatabase {
       size: '500ml',
       category: 'Groceries',
     ),
-    // ---------- BAKERY ----------
+
+    // ---------- Health & Wellness----------
     Product(id: 'p19', name: 'Large Eggs', size: '12 pack', category: 'Bakery'),
     Product(
       id: 'p20',
       name: 'Free Range Eggs',
       size: '6 pack',
-      category: 'Bakery',
+      category: 'Heath & Wellness',
     ),
     Product(
       id: 'p21',
       name: 'Organic Eggs',
       size: '12 pack',
-      category: 'Bakery',
+      category: 'Health & Wellness',
     ),
     Product(id: 'p22', name: 'Jumbo Eggs', size: '18 pack', category: 'Bakery'),
     Product(id: 'p23', name: 'Brown Eggs', size: '12 pack', category: 'Bakery'),
@@ -144,28 +146,29 @@ class MockDatabase {
       id: 'p26',
       name: 'Whole Wheat Bread',
       size: '600g',
-      category: 'Bakery',
+      category: 'Health & Wellness',
     ),
     Product(id: 'p27', name: 'Rye Bread', size: '500g', category: 'Bakery'),
     Product(
       id: 'p28',
       name: 'Gluten Free Bread',
       size: '400g',
-      category: 'Bakery',
+      category: 'Health & Wellness',
     ),
     Product(
       id: 'p29',
       name: 'Sourdough Bread',
       size: '800g',
-      category: 'Bakery',
+      category: 'Heath & Wellness',
     ),
     Product(
       id: 'p30',
       name: 'Multigrain Bread',
       size: '750g',
-      category: 'Bakery',
+      category: 'Health & Wellness',
     ),
-    // ---------- MEAT ----------
+
+    // ---------- Stationery ----------
     Product(id: 'p31', name: 'Chicken Breast', size: '1kg', category: 'Meat'),
     Product(id: 'p32', name: 'Chicken Thighs', size: '500g', category: 'Meat'),
     Product(id: 'p33', name: 'Whole Chicken', size: '1.5kg', category: 'Meat'),
@@ -174,13 +177,13 @@ class MockDatabase {
       id: 'p35',
       name: 'Chicken Drumsticks',
       size: '800g',
-      category: 'Meat',
+      category: 'Stationery',
     ),
     Product(
       id: 'p36',
       name: 'Free Range Chicken',
       size: '1.2kg',
-      category: 'Meat',
+      category: 'Stationery',
     ),
     // ---------- PERSONAL CARE ----------
     Product(
@@ -219,7 +222,8 @@ class MockDatabase {
       size: '100ml',
       category: 'Personal Care',
     ),
-    // ---------- HOUSEHOLD ----------
+
+    // ----------Cleaning &  HOUSEHOLD ----------
     Product(
       id: 'p43',
       name: 'Dishwasher Tablets',
@@ -255,8 +259,8 @@ class MockDatabase {
     Product(id: 'p49', name: 'Coca-Cola 2L', size: '2L', category: 'Beverages'),
     Product(
       id: 'p50',
-      name: 'Potatoes 2kg',
-      size: '2kg',
+      name: 'Potatoes 1kg',
+      size: '1kg',
       category: 'Groceries',
     ),
     Product(
@@ -265,7 +269,7 @@ class MockDatabase {
       size: '2L',
       category: 'Groceries',
     ),
-    Product(id: 'p52', name: 'Savoury Chips', size: '150g', category: 'Snacks'),
+    // Product(id: 'p52', name: 'Savoury Chips', size: '150g', category: 'Snacks'),
   ];
   static List<Map<String, String>> retailers = [
     {'id': 'r1', 'name': 'Pick n Pay'},
