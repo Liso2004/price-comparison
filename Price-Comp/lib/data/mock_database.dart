@@ -24,6 +24,32 @@ class MockDatabase {
     return 0.0;
   }
 
+  // NEW METHOD: Get products with retailer information
+  // This creates product variants for each retailer
+  static List<Product> getProductsWithRetailers() {
+    List<Product> productsWithRetailers = [];
+    for (var baseProduct in products) {
+      for (var retailer in retailers) {
+        final retailerId = retailer['id']!;
+        final productUrl =
+            '${retailerBaseUrls[retailerId]}/product/${baseProduct.id}';
+        productsWithRetailers.add(
+          Product(
+            id: baseProduct.id,
+            name: baseProduct.name,
+            size: baseProduct.size,
+            category: baseProduct.category,
+            image: baseProduct.image,
+            retailerId: retailerId,
+            productUrl: productUrl,
+          ),
+        );
+      }
+    }
+    return productsWithRetailers;
+  }
+
+  // UPDATED: Search now returns products WITH retailer information
   static Future<List<Product>> searchProducts(
     String query, {
     int delayMs = 600,

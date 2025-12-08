@@ -3,10 +3,10 @@ import '../data/mock_database.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_placeholder.dart';
+import '../app/main_scaffold.dart';
 import 'comparison_page.dart';
 import '../widgets/filter_page.dart';
 import '../widgets/recommended_products_horizontal.dart';
-import '../app/main_scaffold.dart';
 
 // --- Styling Constants ---
 const Color _primaryColor = Color(0xFF2563EB);
@@ -99,7 +99,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
-      final res = await MockDatabase.searchProducts(query, fail: fail);
+      final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
       List<Product> withPrices = res;
 
       // Apply category filter
@@ -133,8 +133,25 @@ class _SearchPageState extends State<SearchPage> {
   void _onProductTap(Product p) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ComparisonPage(product: p)),
+      MaterialPageRoute(
+        builder: (_) => ComparisonPage(
+          product: p,
+          initialRetailerId: p.retailerId, // NEW: Pass retailer ID from product
+        ),
+      ),
     );
+  }
+
+  /// Get retailer ID for a product (matches ProductCard's display logic)
+  String _getRetailerIdForProduct(String productId) {
+    const retailers = [
+      'r2',
+      'r1',
+      'r3',
+      'r4',
+    ]; // Checkers, Pick n Pay, Woolworths, Shoprite
+    final index = productId.hashCode % retailers.length;
+    return retailers[index];
   }
 
   /// Sorts results based on selected sort type

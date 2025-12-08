@@ -31,14 +31,6 @@ class _FilterPageState extends State<FilterPage> {
     'Pick n Pay',
     'Shoprite',
   ];
-  final List<String> _brands = [
-    'Sasko',
-    'Coca Cola',
-    'Omo',
-    'Nestle',
-    'Bokomo',
-    'Huggies',
-  ];
   final List<String> _sortOptions = [
     'Low → High',
     'High → Low',
@@ -50,7 +42,6 @@ class _FilterPageState extends State<FilterPage> {
   String? _selectedRetailer;
   String? _selectedCategory;
   late String _selectedSort = 'none';
-  Set<String> _selectedBrands = {};
 
   // REMOVED: Controllers for Price Range
   // REMOVED: late TextEditingController _minPriceCtrl;
@@ -75,7 +66,7 @@ class _FilterPageState extends State<FilterPage> {
 
     // REMOVED: Price Controller initialization
 
-    _selectedBrands = {'none'}; // Mock one brand selected to match mockup style
+  
   }
 
   // REMOVED: dispose() method is no longer needed to dispose of price controllers
@@ -178,14 +169,7 @@ class _FilterPageState extends State<FilterPage> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.dark_mode_outlined, color: _darkTextColor),
-            onPressed: () {
-              // Dark mode toggle functionality (not implemented)
-            },
-          ),
-        ],
+        actions: [],
       ),
       body: Stack(
         children: [
@@ -236,23 +220,6 @@ class _FilterPageState extends State<FilterPage> {
                       _selectedSort = option == _selectedSort ? 'none' : option;
                     });
                   },
-                ),
-
-                // --- BRAND ---
-                _buildChipGroup(
-                  title: 'Brand',
-                  options: _brands,
-                  isSelected: (option) => _selectedBrands.contains(option),
-                  onSelected: (option) {
-                    setState(() {
-                      if (_selectedBrands.contains(option)) {
-                        _selectedBrands.remove(option);
-                      } else {
-                        _selectedBrands.add(option);
-                      }
-                    });
-                  },
-                  multiSelect: true,
                 ),
 
                 const SizedBox(height: 16),
