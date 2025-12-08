@@ -35,9 +35,17 @@ class _ComparisonPageState extends State<ComparisonPage>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
     debugPrint('[ComparisonPage] started for ${widget.product.id}');
-    // Auto-select the initial retailer if provided
+    // UPDATED: Auto-select the initial retailer if provided
     if (widget.initialRetailerId != null) {
       selectedRetailers.add(widget.initialRetailerId!);
+      debugPrint(
+        '[ComparisonPage] Auto-selected retailer: ${widget.initialRetailerId}',
+      );
+    } else {
+      // If no retailer specified, select all retailers by default
+      selectedRetailers.addAll(
+        MockDatabase.retailers.map((r) => r['id']!).toList(),
+      );
     }
     _loadComparison();
   }
@@ -57,11 +65,16 @@ class _ComparisonPageState extends State<ComparisonPage>
     setState(() {
       _loading = true;
       _error = null;
-      // On refresh: reset to initial retailer selection (if any)
+      // UPDATED: On refresh - reset to initial retailer selection
       if (isRefresh) {
         selectedRetailers.clear();
         if (widget.initialRetailerId != null) {
           selectedRetailers.add(widget.initialRetailerId!);
+        } else {
+          // If no initial retailer, select all
+          selectedRetailers.addAll(
+            MockDatabase.retailers.map((r) => r['id']!).toList(),
+          );
         }
         _prices = [];
         _isInitialLoad = false;
@@ -75,7 +88,6 @@ class _ComparisonPageState extends State<ComparisonPage>
       );
       setState(() {
         _prices = res;
-        // No auto-selection - user must manually select retailers
         _isInitialLoad = false;
       });
     } catch (e) {
@@ -152,13 +164,13 @@ class _ComparisonPageState extends State<ComparisonPage>
     final filteredPrices = _getFilteredPrices();
     final best = getBestPrice();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Compare'),
-        leading: BackButton(onPressed: () => Navigator.pop(context)),
-      ),
-      body: SafeArea(
-        child: Padding(
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Compare'),
+          leading: BackButton(onPressed: () => Navigator.pop(context)),
+        ),
+        body: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
@@ -208,9 +220,23 @@ class _ComparisonPageState extends State<ComparisonPage>
                           final id = r['id']!;
                           final name = r['name']!;
                           final sel = selectedRetailers.contains(id);
+                          // NEW: Check if this is the initial retailer
+                          final isInitialRetailer =
+                              id == widget.initialRetailerId;
                           return FilterChip(
                             label: Text(name),
                             selected: sel,
+                            // NEW: Visual highlighting for initial retailer
+                            backgroundColor: isInitialRetailer
+                                ? const Color(
+                                    0xFFEFF6FF,
+                                  ) // Light blue background
+                                : null,
+                            selectedColor: isInitialRetailer
+                                ? const Color(
+                                    0xFF2563EB,
+                                  ) // Darker blue when selected
+                                : null,
                             onSelected: (v) => setState(() {
                               if (v) {
                                 selectedRetailers.add(id);
