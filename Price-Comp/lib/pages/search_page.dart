@@ -41,6 +41,12 @@ class _SearchPageState extends State<SearchPage> {
   bool _showLeftArrow = false;
   bool _showRightArrow = true;
 
+  // === ADD THE CLEAN QUERY METHOD HERE ===
+  String _cleanQuery(String query) {
+    // Trim, lowercase, and collapse multiple spaces
+    return query.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -665,10 +671,15 @@ class _SearchPageState extends State<SearchPage> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        // Navigate back to the first route (MainScaffold) and pop the search page
-                                        Navigator.popUntil(
+                                        // Always push the home screen and remove all previous routes
+                                        Navigator.pushAndRemoveUntil(
                                           context,
-                                          (route) => route.isFirst,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const MainScaffold(),
+                                          ), // Your home widget
+                                          (route) =>
+                                              false, // Remove all existing routes
                                         );
                                       },
                                       child: const Text(
