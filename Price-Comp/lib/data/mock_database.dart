@@ -16,8 +16,6 @@ class MockDatabase {
     'Potatoes',
     'Rice 1kg',
   ];
-
-  // ---------------------- UPDATED WITH IMAGES ----------------------
   static List<Map<String, String>> categories = [
     {
       'id': 'cat1',
@@ -44,7 +42,6 @@ class MockDatabase {
     // {'id': 'cat7', 'name': 'Snacks', 'imagePath': 'assets/images/snacks.jpg'},
     // todo when i come from the shop , remove snack products and change image links 
   ];
-
   static List<Product> products = [
     // ---------- Electronics , really doesnt matter that its beverages ----------
     Product(
@@ -73,7 +70,6 @@ class MockDatabase {
       size: '500ml',
       category: 'Electronics',
     ),
-
     // ---------- GROCERIES ----------
     Product(
       id: 'p7',
@@ -91,7 +87,6 @@ class MockDatabase {
     ),
     Product(id: 'p11', name: 'Wild Rice', size: '500g', category: 'Groceries'),
     Product(id: 'p12', name: 'Sushi Rice', size: '1kg', category: 'Groceries'),
-
     Product(
       id: 'p13',
       name: 'Extra Virgin Olive Oil',
@@ -128,8 +123,12 @@ class MockDatabase {
       size: '500ml',
       category: 'Groceries',
     ),
+<<<<<<< HEAD
 
     // ---------- Health & Wellness----------
+=======
+    // ---------- BAKERY ----------
+>>>>>>> aff1ace393ac5eb520bca78c7e9928f92fcafcf3
     Product(id: 'p19', name: 'Large Eggs', size: '12 pack', category: 'Bakery'),
     Product(
       id: 'p20',
@@ -146,7 +145,6 @@ class MockDatabase {
     Product(id: 'p22', name: 'Jumbo Eggs', size: '18 pack', category: 'Bakery'),
     Product(id: 'p23', name: 'Brown Eggs', size: '12 pack', category: 'Bakery'),
     Product(id: 'p24', name: 'Quail Eggs', size: '24 pack', category: 'Bakery'),
-
     Product(id: 'p25', name: 'White Bread', size: '700g', category: 'Bakery'),
     Product(
       id: 'p26',
@@ -173,8 +171,12 @@ class MockDatabase {
       size: '750g',
       category: 'Health & Wellness',
     ),
+<<<<<<< HEAD
 
     // ---------- Stationery ----------
+=======
+    // ---------- MEAT ----------
+>>>>>>> aff1ace393ac5eb520bca78c7e9928f92fcafcf3
     Product(id: 'p31', name: 'Chicken Breast', size: '1kg', category: 'Meat'),
     Product(id: 'p32', name: 'Chicken Thighs', size: '500g', category: 'Meat'),
     Product(id: 'p33', name: 'Whole Chicken', size: '1.5kg', category: 'Meat'),
@@ -191,7 +193,6 @@ class MockDatabase {
       size: '1.2kg',
       category: 'Stationery',
     ),
-
     // ---------- PERSONAL CARE ----------
     Product(
       id: 'p37',
@@ -229,8 +230,12 @@ class MockDatabase {
       size: '100ml',
       category: 'Personal Care',
     ),
+<<<<<<< HEAD
 
     // ----------Cleaning &  HOUSEHOLD ----------
+=======
+    // ---------- HOUSEHOLD ----------
+>>>>>>> aff1ace393ac5eb520bca78c7e9928f92fcafcf3
     Product(
       id: 'p43',
       name: 'Dishwasher Tablets',
@@ -262,7 +267,6 @@ class MockDatabase {
       size: '40 tablets',
       category: 'Household',
     ),
-
     // ---------- EXTRA ----------
     Product(id: 'p49', name: 'Coca-Cola 2L', size: '2L', category: 'Beverages'),
     Product(
@@ -279,19 +283,50 @@ class MockDatabase {
     ),
     // Product(id: 'p52', name: 'Savoury Chips', size: '150g', category: 'Snacks'),
   ];
-
   static List<Map<String, String>> retailers = [
     {'id': 'r1', 'name': 'Pick n Pay'},
     {'id': 'r2', 'name': 'Checkers'},
     {'id': 'r3', 'name': 'Woolworths'},
     {'id': 'r4', 'name': 'Shoprite'},
   ];
-
+  // NEW: Map of retailer IDs to their base URLs
+  static final Map<String, String> retailerBaseUrls = {
+    'r1': 'https://www.pnp.co.za',
+    'r2': 'https://www.checkers.co.za',
+    'r3': 'https://www.woolworths.co.za',
+    'r4': 'https://www.shoprite.co.za',
+  };
   static double getMockPrice(String productId) {
     final n = int.tryParse(productId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     return 10 + (n * 1.75) % 120;
   }
 
+  // NEW METHOD: Get products with retailer information
+  // This creates product variants for each retailer
+  static List<Product> getProductsWithRetailers() {
+    List<Product> productsWithRetailers = [];
+    for (var baseProduct in products) {
+      for (var retailer in retailers) {
+        final retailerId = retailer['id']!;
+        final productUrl =
+            '${retailerBaseUrls[retailerId]}/product/${baseProduct.id}';
+        productsWithRetailers.add(
+          Product(
+            id: baseProduct.id,
+            name: baseProduct.name,
+            size: baseProduct.size,
+            category: baseProduct.category,
+            image: baseProduct.image,
+            retailerId: retailerId,
+            productUrl: productUrl,
+          ),
+        );
+      }
+    }
+    return productsWithRetailers;
+  }
+
+  // UPDATED: Search now returns products WITH retailer information
   static Future<List<Product>> searchProducts(
     String query, {
     int delayMs = 600,
@@ -301,7 +336,10 @@ class MockDatabase {
     if (fail) throw Exception('Network error (mock)');
     if (query.trim().isEmpty) return [];
     final q = query.toLowerCase();
-    return products
+    // Get all products with retailer variants
+    final allProductsWithRetailers = getProductsWithRetailers();
+    // Filter based on search query
+    return allProductsWithRetailers
         .where(
           (p) =>
               p.name.toLowerCase().contains(q) ||
@@ -321,15 +359,6 @@ class MockDatabase {
     if (fail) {
       throw Exception("Network failed to load product comparison");
     }
-
-    // Map of retailer IDs to their base URLs
-    final Map<String, String> retailerBaseUrls = {
-      'r1': 'https://www.pnp.co.za',
-      'r2': 'https://www.checkers.co.za',
-      'r3': 'https://www.woolworths.co.za',
-      'r4': 'https://www.shoprite.co.za',
-    };
-
     List<RetailerPrice> list = [];
     for (var r in retailers) {
       final id = r['id']!;
@@ -337,7 +366,6 @@ class MockDatabase {
       final base = getMockPrice(productId);
       double p = (base + (base * (id.hashCode % 7) / 100)).clamp(5.0, 999.0);
       final productUrl = retailerBaseUrls[id] ?? 'https://www.google.com';
-
       if (partial && id == 'r3') {
         list.add(
           RetailerPrice(
