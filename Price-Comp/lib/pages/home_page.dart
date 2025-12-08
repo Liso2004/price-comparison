@@ -182,90 +182,79 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // ------------------------ QUICK SEARCH ------------------------
-                const Text(
-                  "Quick Search",
-                  style: TextStyle(
-                    fontFamily: "Inter",
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: Color(0xFF3D3D3D),
+// ---------------- QUICK SEARCH TITLE ----------------
+            Text(
+              'Quick Search',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height:8 ),
+            //  QUICK SEARCH ----------------
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 42, // height of the chips
+                    child: ListView.separated(
+                      controller: _chipScrollCtrl,
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.only(left: 0, right: 110),
+                      itemCount: MockDatabase.quickSearches.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        final q = MockDatabase.quickSearches[index];
+                        return GestureDetector(
+                          onTap: () => _onQuickTap(q),
+                          child: Container(
+                            constraints: const BoxConstraints(minWidth: 80),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2563EB),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              q,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // Quick Search Chips with Scroll Arrow
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 42,
-                        child: ListView.separated(
-                          controller: _chipScrollCtrl,
-                          scrollDirection: Axis.horizontal,
-                          itemCount: MockDatabase.quickSearches.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 10),
-                          itemBuilder: (context, index) {
-                            final q = MockDatabase.quickSearches[index];
-                            return GestureDetector(
-                              onTap: () => _onQuickTap(q),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2563EB),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Text(
-                                  q,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: "Inter",
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                const SizedBox(width: 8),
+                // Arrow container
+                Container(
+                  width: 48,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 48,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFE5E7EB),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        splashRadius: 22,
-                        icon: const Icon(
-                          Icons.chevron_right,
-                          color: Color(0xFF6B7280),
-                        ),
-                        onPressed: () => _scrollChips(true),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: IconButton(
+                    splashRadius: 22,
+                    icon: const Icon(Icons.chevron_right),
+                    color: Colors.black87,
+                    onPressed: () => _scrollChips(true),
+                  ),
                 ),
-
-                const SizedBox(height: 24),
+              ],
+            ),
+            const SizedBox(height: 18),
 
                 // ------------------------ CATEGORIES ------------------------
                 const Text(
