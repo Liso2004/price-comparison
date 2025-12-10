@@ -250,10 +250,38 @@ class _HomePageState extends State<HomePage> {
                                     fontFamily: "Inter",
                                   ),
                                 ),
+                              )
+                            : ListView.separated(
+                                controller: _chipScrollCtrl,
+                                scrollDirection: Axis.horizontal,
+                                itemCount: MockDatabase.quickSearches.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 10),
+                                itemBuilder: (context, index) {
+                                  final q = MockDatabase.quickSearches[index];
+                                  return GestureDetector(
+                                    onTap: () => _onQuickTap(q),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2563EB),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Text(
+                                        q,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: "Inter",
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -291,7 +319,7 @@ class _HomePageState extends State<HomePage> {
 
                 // ------------------------ CATEGORIES ------------------------
                 const Text(
-                  "Categories",
+                  "Product Categories",
                   style: TextStyle(
                     fontFamily: "Inter",
                     fontWeight: FontWeight.w600,
