@@ -1,57 +1,71 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
-import subprocess
-import asyncio
-import json
 import os
-from datetime import datetime
-import pytz
+import json
+import glob
 import re
+import asyncio
+import subprocess
+from datetime import datetime
+from typing import List, Optional, Any
+from urllib.parse import quote, unquote
+import base64
+import httpx
+
+import pytz
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field, BeforeValidator, AnyUrl
+from typing_extensions import Annotated
+from pymongo import MongoClient, ASCENDING
+
+# ---------------------------------------------------------------------------
+# 1. CONFIGURATION & DATABASE SETUP
+# ---------------------------------------------------------------------------
 
 # Load environment variables
 load_dotenv()
 
-# MongoDB setup
-from pymongo import MongoClient
-
 MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = os.getenv("MONGO_DB", "priceapp_db")
-COLLECTION_NAME = os.getenv("MONGO_COLLECTION", "product_storage")
+DB_NAME = os.getenv("MONGO_DB")
+COLLECTION_NAME = os.getenv("MONGO_COLLECTION")
 
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-product_collection = db[COLLECTION_NAME]
-
-# LOCAL IMPORT
+# Connect to MongoDB
 try:
-    from scraper_pnp.time_checker import within_crawl_window
-except ImportError:
-    # Fallback if time_checker is not available
-    def within_crawl_window():
-        return True, "Window check unavailable"
+    client = MongoClient(MONGO_URI)
+    db = client[DB_NAME]
+    products_collection = db[COLLECTION_NAME]
+    # Create indexes for faster searching
+    products_collection.create_index([("name", ASCENDING)])
+    products_collection.create_index([("retailer", ASCENDING)])
+    products_collection.create_index([("category", ASCENDING)])
+    print(f"✅ Connected to MongoDB: {DB_NAME} / {COLLECTION_NAME}")
+except Exception as e:
+    print(f"❌ Could not connect to MongoDB: {e}")
 
-# ------------------------------------
-#          FASTAPI APP SETUP
-# ------------------------------------
+# ---------------------------------------------------------------------------
+# 2. PYDANTIC SCHEMAS (DATA MODELS)
+# ---------------------------------------------------------------------------
 
-app = FastAPI(
-    title="Retailer Scraper & Product Search API",
-    version="3.0.0"
-)
+# Helper to automatically convert MongoDB's _id (ObjectId) to string
+PyObjectId = Annotated[str, BeforeValidator(str)]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+class ProductBase(BaseModel):
+    productName: str
+    price: Optional[str] = None
+    productImageURL: Optional[str] = None
+    productURL: Optional[str] = None
+    category: Optional[str] = "Uncategorized"
+    retailer: Optional[str] = "Unknown"
 
-# ------------------------------------
-#         RESPONSE MODELS (SCRAPER)
-# ------------------------------------
+class ProductOut(ProductBase):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+
+    class Config:
+        populate_by_name = True
+        json_encoders = {
+            # Handle ObjectId serialization if needed
+        }
 
 class ScrapeResponse(BaseModel):
     status: str
@@ -66,184 +80,311 @@ class ScrapeStatus(BaseModel):
     start_time: str
     end_time: Optional[str] = None
 
+# ---------------------------------------------------------------------------
+# 3. UTILITY FUNCTIONS
+# ---------------------------------------------------------------------------
+
+# Scraper Job Storage (In-memory)
 scrape_jobs = {}
 
-# ------------------------------------
-#      STARTUP - SEED DATABASE
-# ------------------------------------
+# Try to import time_checker, fallback if missing
+try:
+    from scraper_pnp.time_checker import within_crawl_window
+except ImportError:
+    def within_crawl_window():
+        return True, "Window check unavailable (Dev Mode)"
 
-def seed_products_from_cleaned_json():
-    """Load cleaned JSON files from all retailers and insert into MongoDB."""
-    import os
-    
+def parse_price(value: Any) -> Optional[float]:
+    """Cleans a price string (e.g., 'R 39.99') into a float (39.99)."""
+    if value is None:
+        return None
+    try:
+        # Remove any character that isn't a digit or a decimal point
+        cleaned = re.sub(r"[^0-9.]", "", str(value))
+        return float(cleaned) if cleaned else None
+    except Exception:
+        return None
+
+async def fetch_image_from_url(url: str) -> Optional[bytes]:
+    """Fetch image bytes from external URL using httpx."""
+    if not url:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url, follow_redirects=True)
+            if response.status_code == 200:
+                return response.content
+    except Exception as e:
+        print(f"⚠️ Failed to fetch image from {url}: {e}")
+    return None
+
+def add_image_proxy_url(product: dict, base_url: str = "http://127.0.0.1:8000") -> dict:
+    """Replace productImageURL with proxy URL if image exists."""
+    if product.get("productImageURL"):
+        encoded_url = quote(product["productImageURL"], safe="")
+        product["productImageURL"] = f"{base_url}/image?url={encoded_url}"
+    return product
+
+# ---------------------------------------------------------------------------
+# 4. FASTAPI APP INIT
+# ---------------------------------------------------------------------------
+
+app = FastAPI(
+    title="Retailer Scraper & Product Search API",
+    version="3.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------------------------------------------------------------------
+# 5. DATABASE SEEDING LOGIC
+# ---------------------------------------------------------------------------
+
+def seed_database_from_json():
+    """Reads cleaned JSON files from scraper folders and inserts into MongoDB."""
     base_path = os.path.dirname(__file__)
-    cleaned_files = [
-        ("scraper_pnp/cleaned/picknpay_cleaned_data.json", "Pick n Pay"),
-        ("scraper_checkers/cleaned/checkers_scraped_data.json", "Checkers"),
-        ("scraper_woolworths/cleaned/woolworths_cleaned.json", "Woolworths"),
-        ("scraper_shoprite/cleaned/cleaned_grocery.json", "Shoprite"),
-    ]
-    
+    # Look for files like: scraper_pnp/cleaned/picknpay_cleaned_data.json
+    pattern = os.path.join(base_path, "scraper_*", "cleaned", "*.json")
+    files = glob.glob(pattern)
+
     seeded_count = 0
     
-    for file_path, retailer_name in cleaned_files:
-        full_path = os.path.join(base_path, file_path)
-        
-        if not os.path.exists(full_path):
-            print(f"⚠️  Cleaned file not found: {full_path}")
-            continue
-        
+    for filepath in files:
+        # Infer retailer from filename or folder
+        retailer_name = "Unknown"
+        lower_path = filepath.lower()
+        if "picknpay" in lower_path or "pnp" in lower_path: retailer_name = "Pick n Pay"
+        elif "checkers" in lower_path: retailer_name = "Checkers"
+        elif "woolworths" in lower_path: retailer_name = "Woolworths"
+        elif "shoprite" in lower_path: retailer_name = "Shoprite"
+
         try:
-            with open(full_path, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
-            # Handle different JSON structures (some are lists, some are nested)
-            if isinstance(data, dict):
-                # Handle nested structure like PnP ({"picknpay": [...]})
-                products = []
-                for key, value in data.items():
-                    if isinstance(value, list):
-                        products.extend(value)
-            elif isinstance(data, list):
-                products = data
-            else:
-                print(f"⚠️  Unexpected data structure in {file_path}")
-                continue
-            
-            # Ensure retailer field is set
-            for product in products:
-                if 'retailer' not in product or not product['retailer']:
-                    product['retailer'] = retailer_name
-            
-            # Insert into MongoDB
-            if products:
-                result = product_collection.insert_many(products, ordered=False)
-                seeded_count += len(result.inserted_ids)
-                print(f"✓ Seeded {len(result.inserted_ids)} products from {retailer_name}")
-        
         except Exception as e:
-            print(f"✗ Error seeding {retailer_name}: {str(e)}")
-    
+            print(f"⚠️ Error reading {filepath}: {e}")
+            continue
+
+        # Normalize data (handle list vs dict structures)
+        products_list = []
+        if isinstance(data, list):
+            products_list = data
+        elif isinstance(data, dict):
+            # Some scrapers might wrap list in a key
+            for v in data.values():
+                if isinstance(v, list):
+                    products_list.extend(v)
+
+        # Process and Upsert
+        for item in products_list:
+            name = item.get("name") or item.get("productName") or item.get("title")
+            if not name:
+                continue
+
+            # Standardize fields
+            price_val = parse_price(item.get("price") or item.get("price_str"))
+            buy_url = item.get("buy_url") or item.get("url") or item.get("productURL")
+            
+            doc = {
+                "productName": name,
+                "price": price_val,
+                "productImageURL": item.get("image") or item.get("productImageURL") or item.get("img"),
+                "productURL": buy_url,
+                "category": item.get("category") or item.get("department") or "Uncategorized",
+                "retailer": item.get("retailer") or retailer_name,
+                "updated_at": datetime.utcnow()
+            }
+
+            # Avoid duplicates: Update if exists, Insert if new
+            # Using 'buy_url' as unique key if present, otherwise 'name'
+            filter_query = {"productURL": buy_url} if buy_url else {"productName": name}
+            
+            result = products_collection.update_one(filter_query, {"$set": doc}, upsert=True)
+            if result.upserted_id:
+                seeded_count += 1
+
     return seeded_count
 
 @app.on_event("startup")
 async def startup_event():
-    """Seed database with cleaned JSON files on app startup."""
+    """Run seeding on startup if DB is empty."""
     try:
-        # Check if collection is empty
-        count = product_collection.count_documents({})
+        count = products_collection.count_documents({})
         if count == 0:
-            print("📦 Database is empty. Seeding with cleaned JSON files...")
-            seeded = seed_products_from_cleaned_json()
-            print(f"🎉 Seeding complete! Total products: {seeded}")
+            print("📦 Database is empty. Seeding from JSON files...")
+            new_items = seed_database_from_json()
+            print(f"🎉 Seeding complete! Added {new_items} new products.")
         else:
-            print(f"✓ Database already contains {count} products. Skipping seed.")
+            print(f"✓ Database ready with {count} products.")
     except Exception as e:
-        print(f"✗ Error during startup: {str(e)}")
+        print(f"✗ Startup Error: {e}")
 
-# ------------------------------------
-#             ROOT
-# ------------------------------------
+# ---------------------------------------------------------------------------
+# 6. SCRAPER BACKGROUND TASK
+# ---------------------------------------------------------------------------
+
+async def run_scrapy_spider(task_id: str):
+    """Executes the external scraping script."""
+    try:
+        # Assumes 'run_scraper.py' exists in the root
+        process = await asyncio.create_subprocess_exec(
+            'python', 'run_scraper.py',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+
+        if process.returncode == 0:
+            scrape_jobs[task_id]["status"] = "completed"
+            scrape_jobs[task_id]["end_time"] = datetime.now().isoformat()
+            # Try to count results if possible
+            scrape_jobs[task_id]["products_scraped"] = products_collection.count_documents({})
+        else:
+            scrape_jobs[task_id]["status"] = "failed"
+            scrape_jobs[task_id]["error"] = stderr.decode()
+
+    except Exception as e:
+        scrape_jobs[task_id]["status"] = "failed"
+        scrape_jobs[task_id]["error"] = str(e)
+
+# ---------------------------------------------------------------------------
+# 7. API ENDPOINTS
+# ---------------------------------------------------------------------------
 
 @app.get("/")
 async def root():
     return {
-        "message": "Retailer Scraper & Product Search API is running!",
-        "status": "active",
+        "message": "Retailer Scraper & Product Search API is active",
+        "database": "MongoDB",
         "endpoints": {
-            "product_endpoints": {
-                "all_products": "GET /products",
-                "search_products": "GET /products?search=<query>",
-                "filter_by_retailer": "GET /products?retailer=<name>",
-                "search_and_retailer": "GET /products?search=<query>&retailer=<name>",
-                "products_by_retailer": "GET /products/retailer/{retailer_name}",
-                "all_retailers": "GET /retailers",
-                "all_categories": "GET /categories",
-                "debug_reseed": "POST /debug/reseed"
-            },
-            "scraper_endpoints": {
-                "status": "GET /scrape/status",
-                "start_scraping": "POST /scrape/start",
-                "get_results": "GET /scrape/results",
-                "job_status": "GET /scrape/jobs/{task_id}"
-            },
-            "docs": "/docs"
+            "docs": "/docs",
+            "products": "/products",
+            "retailers": "/retailers",
+            "categories": "/categories",
+            "image": "/image?url=<encoded_url>"
         }
     }
 
-@app.post("/debug/reseed")
-async def debug_reseed():
-    """Debug endpoint: Clear database and reseed from cleaned JSON files."""
-    try:
-        deleted = product_collection.delete_many({})
-        print(f"🗑️  Deleted {deleted.deleted_count} products")
-        
-        seeded = seed_products_from_cleaned_json()
-        total = product_collection.count_documents({})
-        retailers = product_collection.distinct("retailer")
-        
-        # Check a sample document
-        sample = product_collection.find_one({})
-        
-        return {
-            "status": "success",
-            "deleted": deleted.deleted_count,
-            "seeded": seeded,
-            "total_in_db": total,
-            "retailers": retailers,
-            "sample_document": sample
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/image")
+async def serve_image(url: str):
+    """
+    Proxy endpoint to fetch and serve product images.
+    Usage: GET /image?url=<URL-encoded-image-URL>
+    """
+    if not url:
+        raise HTTPException(status_code=400, detail="url parameter is required")
+    
+    image_bytes = await fetch_image_from_url(url)
+    if not image_bytes:
+        raise HTTPException(status_code=404, detail="Could not fetch image from URL")
+    
+    # Return image as binary stream with appropriate content-type
+    return StreamingResponse(
+        iter([image_bytes]),
+        media_type="image/jpeg",  # Adjust based on actual image type if needed
+        headers={"Cache-Control": "public, max-age=86400"}  # Cache for 24 hours
+    )
 
-@app.post("/debug/fix-missing-retailers")
-async def debug_fix_missing_retailers():
-    """Debug endpoint: Add retailer field to documents missing it."""
-    try:
-        # Map category or other fields to retailer names
-        retailer_mappings = {
-            "Checkers": "Checkers",
-            "Pick n Pay": "Pick n Pay", 
-            "Woolworths": "Woolworths",
-            "Shoprite": "Shoprite"
-        }
-        
-        # Find documents without retailer field
-        missing = list(product_collection.find({"retailer": {"$exists": False}}))
-        print(f"Found {len(missing)} documents without retailer field")
-        
-        # Try to infer retailer from URL or set to "Unknown"
-        updated_count = 0
-        for doc in missing:
-            url = doc.get('productURL', '').lower()
-            retailer = "Unknown"
-            
-            if 'pnp.co.za' in url or 'picknpay' in url.lower():
-                retailer = "Pick n Pay"
-            elif 'checkers.co.za' in url:
-                retailer = "Checkers"
-            elif 'woolworths.co.za' in url:
-                retailer = "Woolworths"
-            elif 'shoprite.co.za' in url:
-                retailer = "Shoprite"
-            
-            product_collection.update_one(
-                {"_id": doc["_id"]},
-                {"$set": {"retailer": retailer}}
-            )
-            updated_count += 1
-        
-        return {
-            "status": "success",
-            "missing_retailers_fixed": updated_count,
-            "total_retailers_now": product_collection.distinct("retailer")
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/products", response_model=List[ProductOut])
+async def get_products(
+    search: Optional[str] = None,
+    retailer: Optional[str] = None,
+    category: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100
+):
+    """
+    Search and filter products.
+    """
+    query = {}
 
-# ------------------------------------
-#          SCRAPER ENDPOINTS
-# ------------------------------------
+    # Case-insensitive Search across name fields and category
+    if search:
+        escaped = re.escape(search)
+        regex_expr = {"$regex": escaped, "$options": "i"}
+        # Match product name/title fields OR category so users can search by category name
+        query["$or"] = [
+            {"productName": regex_expr},
+            {"name": regex_expr},
+            {"title": regex_expr},
+            {"category": regex_expr},
+            {"retailer": regex_expr}
+        ]
+
+    # Filter by Retailer
+    if retailer:
+        query["retailer"] = {"$regex": f"^{re.escape(retailer)}$", "$options": "i"}
+    
+    # Filter by Category
+    if category:
+        query["category"] = {"$regex": f"^{re.escape(category)}$", "$options": "i"}
+
+    # Fetch Data
+    cursor = products_collection.find(query).skip(skip).limit(limit)
+    
+    # Sort in Python to handle None values safely (put None price at end)
+    products = list(cursor)
+    products.sort(key=lambda x: (x.get("price") is None, x.get("price")))
+
+    # Add image proxy URLs to each product
+    for product in products:
+        add_image_proxy_url(product)
+
+    return products
+
+@app.get("/products/category/{category_name}", response_model=List[ProductOut])
+async def get_products_by_category_path(category_name: str):
+    """Shortcut endpoint for categories."""
+    return await get_products(category=category_name)
+
+@app.get("/products/retailer/{retailer_name}", response_model=List[ProductOut])
+async def get_products_by_retailer_path(retailer_name: str):
+    """Shortcut endpoint for retailers."""
+    return await get_products(retailer=retailer_name)
+
+
+@app.get("/products/search", response_model=List[ProductOut])
+async def search_product_and_retailer(
+    product: Optional[str] = None,
+    retailer: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100
+):
+    """Search products by product name (or part of it) and retailer.
+
+    Usage examples:
+    - `/products/search?product=milk&retailer=Shoprite`
+    - `/products/search?product=tomato`
+    - `/products/search?retailer=Pick%20n%20Pay`
+    """
+    if not product and not retailer:
+        raise HTTPException(status_code=400, detail="Provide at least `product` or `retailer` parameter")
+
+    # Delegate to the main get_products function which handles search/filters
+    return await get_products(search=product, retailer=retailer, skip=skip, limit=limit)
+
+@app.get("/categories", response_model=List[dict])
+async def get_categories():
+    """Return all unique categories found in DB."""
+    cats = products_collection.distinct("category")
+    cats = [c for c in cats if c] # filter empty
+    cats.sort()
+    return [{"id": i, "name": c} for i, c in enumerate(cats)]
+
+@app.get("/retailers", response_model=List[dict])
+async def get_retailers():
+    """Return all unique retailers found in DB."""
+    rets = products_collection.distinct("retailer")
+    rets = [r for r in rets if r]
+    rets.sort()
+    return [{"id": i, "name": r} for i, r in enumerate(rets)]
+
+# --- Scraper Endpoints ---
 
 @app.get("/scrape/status")
 async def scrape_status():
@@ -251,21 +392,16 @@ async def scrape_status():
     return {
         "scraping_allowed": allowed,
         "message": message,
-        "window_utc": "04:00-08:45",
-        "window_sast": "06:00-10:45",
-        "current_utc": datetime.now(pytz.utc).strftime('%Y-%m-%d %H:%M:%S UTC'),
-        "current_sast": datetime.now(pytz.timezone('Africa/Johannesburg')).strftime('%Y-%m-%d %H:%M:%S SAST')
+        "server_time": datetime.now(pytz.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
     }
 
 @app.post("/scrape/start", response_model=ScrapeResponse)
 async def start_scrape(background_tasks: BackgroundTasks):
     allowed, message = within_crawl_window()
-
     if not allowed:
         raise HTTPException(status_code=423, detail=f"Scraping not allowed: {message}")
 
     task_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-
     scrape_jobs[task_id] = {
         "status": "running",
         "start_time": datetime.now().isoformat(),
@@ -276,7 +412,7 @@ async def start_scrape(background_tasks: BackgroundTasks):
 
     return ScrapeResponse(
         status="started",
-        message="Scraping initiated.",
+        message="Scraping initiated in background.",
         task_id=task_id,
         timestamp=datetime.now().isoformat()
     )
@@ -287,173 +423,22 @@ async def get_job_status(task_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
     return scrape_jobs[task_id]
 
-@app.get("/scrape/results")
-async def get_scrape_results():
+# --- Debug Endpoints ---
+
+@app.post("/debug/reseed")
+async def debug_reseed():
+    """Clears DB and re-runs seeding from JSON files."""
     try:
-        with open('data/products.json', 'r', encoding='utf-8') as f:
-            products = json.load(f)
-        return {"count": len(products), "products": products}
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="No results found. Run scraper first.")
-
-async def run_scrapy_spider(task_id: str):
-    try:
-        process = await asyncio.create_subprocess_exec(
-            'python', 'run_scraper.py',
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-
-        stdout, stderr = await process.communicate()
-
-        if process.returncode == 0:
-            scrape_jobs[task_id]["status"] = "completed"
-            scrape_jobs[task_id]["end_time"] = datetime.now().isoformat()
-
-            try:
-                with open('data/products.json', 'r', encoding='utf-8') as f:
-                    products = json.load(f)
-                scrape_jobs[task_id]["products_scraped"] = len(products)
-            except:
-                scrape_jobs[task_id]["products_scraped"] = 0
-        else:
-            scrape_jobs[task_id]["status"] = "failed"
-            scrape_jobs[task_id]["error"] = stderr.decode()
-
-    except Exception as e:
-        scrape_jobs[task_id]["status"] = "failed"
-        scrape_jobs[task_id]["error"] = str(e)
-
-# ------------------------------------
-#    Utility – Parse price like "R39.99"
-# ------------------------------------
-
-def parse_price(price_str):
-    if not price_str:
-        return None
-    cleaned = re.sub(r"[^\d.]", "", str(price_str))
-    try:
-        return float(cleaned)
-    except:
-        return None
-
-# ------------------------------------
-# 🚀 PRODUCTS ENDPOINTS
-# ------------------------------------
-
-@app.get("/categories")
-async def get_categories():
-    """Get list of unique categories from all products."""
-    try:
-        # Get distinct categories from products
-        categories = product_collection.distinct("category")
-        
-        if not categories:
-            # Return default categories if none found
-            categories = ["Groceries", "Beverages", "Household", "Personal Care"]
-        
-        return [{"id": i, "name": cat} for i, cat in enumerate(categories)]
-
+        deleted = products_collection.delete_many({})
+        seeded = seed_database_from_json()
+        return {
+            "status": "success", 
+            "deleted_count": deleted.deleted_count, 
+            "seeded_count": seeded
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# ------------------------------------
-# 🚀 GET RETAILERS
-# ------------------------------------
-
-@app.get("/retailers")
-async def get_retailers():
-    """Get list of unique retailers from all products."""
-    try:
-        # Get distinct retailers from products
-        retailers = product_collection.distinct("retailer")
-        
-        if not retailers:
-            # Return empty list if none found
-            retailers = []
-        
-        return [{"id": i, "name": retailer} for i, retailer in enumerate(retailers)]
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ------------------------------------
-# 🚀 GET PRODUCTS BY RETAILER
-# ------------------------------------
-
-@app.get("/products/retailer/{retailer_name}")
-async def get_products_by_retailer(retailer_name: str):
-    """Get all products from a specific retailer. Returns sorted by price ascending."""
-    try:
-        if not retailer_name:
-            raise HTTPException(status_code=400, detail="Retailer name is required")
-
-        # Find products by retailer (case-insensitive)
-        regex = re.compile(f"^{re.escape(retailer_name)}$", re.IGNORECASE)
-        results = list(product_collection.find({"retailer": regex}, {"_id": 0}))
-
-        if not results:
-            raise HTTPException(status_code=404, detail=f"No products found for retailer: {retailer_name}")
-
-        # Parse prices and sort
-        for item in results:
-            item["numeric_price"] = parse_price(item.get("price"))
-
-        # Sort by price ascending (None values go last)
-        results = sorted(results, key=lambda x: (x["numeric_price"] is None, x["numeric_price"]))
-
-        return results
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ------------------------------------
-# 🚀 FILTER PRODUCTS BY RETAILER & SEARCH
-# ------------------------------------
-
-@app.get("/products")
-async def get_all_products(search: Optional[str] = None, retailer: Optional[str] = None):
-    """Get products with optional search query and/or retailer filter. Returns sorted by price ascending."""
-    try:
-        filters = {}
-        
-        # Add search filter
-        if search:
-            regex = re.compile(search, re.IGNORECASE)
-            filters["productName"] = regex
-        
-        # Add retailer filter
-        if retailer:
-            retailer_regex = re.compile(f"^{re.escape(retailer)}$", re.IGNORECASE)
-            filters["retailer"] = retailer_regex
-
-        # Query MongoDB
-        results = list(product_collection.find(filters, {"_id": 0}))
-
-        if not results:
-            raise HTTPException(status_code=404, detail="No products found")
-
-        # Parse prices and sort
-        for item in results:
-            item["numeric_price"] = parse_price(item.get("price"))
-
-        # Sort by price ascending (None values go last)
-        results = sorted(results, key=lambda x: (x["numeric_price"] is None, x["numeric_price"]))
-
-        return results
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ------------------------------------
-#        MAIN ENTRY
-# ------------------------------------
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)), reload=True)

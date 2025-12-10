@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import '../data/mock_database.dart';
 import '../widgets/category_card.dart';
+import '../services/services.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
 
-//comment
 class HomePage extends StatefulWidget {
   final void Function(String)? onNavigateToSearch;
   const HomePage({super.key, this.onNavigateToSearch});
@@ -16,6 +15,46 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _chipScrollCtrl = ScrollController();
+
+  // Hardcoded categories that will be used to search backend
+  final List<Map<String, String>> _categories = [
+    {
+      'name': 'Groceries',
+      'imagePath': 'assets/images/groceries.jpg',
+    },
+    {
+      'name': 'Electronics',
+      'imagePath': 'assets/images/electronics.jpg',
+    },
+    {
+      'name': 'Health & Wellness',
+      'imagePath': 'assets/images/health.jpg',
+    },
+    {
+      'name': 'Cleaning & Household',
+      'imagePath': 'assets/images/cleaning.jpg',
+    },
+    {
+      'name': 'Personal Care',
+      'imagePath': 'assets/images/personal-care.jpg',
+    },
+    {
+      'name': 'Stationery',
+      'imagePath': 'assets/images/stationery.jpg',
+    },
+  ];
+
+  // Hardcoded quick search terms
+  final List<String> _quickSearches = [
+    'Milk',
+    'Rice',
+    'Bread',
+    'Eggs',
+    'Chicken',
+    'Oil',
+    'Tomato',
+    'Sugar'
+  ];
 
   @override
   void initState() {
@@ -55,6 +94,23 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: q)),
+    );
+  }
+
+  void _onCategoryTap(String categoryName) {
+    // When category is tapped, search backend for products matching that category
+    if (widget.onNavigateToSearch != null) {
+      widget.onNavigateToSearch!(categoryName);
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchPage(
+          initialQuery: categoryName,
+        ),
+      ),
     );
   }
 
@@ -207,64 +263,42 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Quick Search Chips with Scroll Arrow
                 Row(
                   children: [
                     Expanded(
                       child: SizedBox(
                         height: 42,
-                        child: MockDatabase.quickSearches.isEmpty
-                            ? Center(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(
-                                      Icons.info_outline,
-                                      size: 18,
-                                      color: Color(0xFF6B7280),
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'No quick searches',
-                                      style: TextStyle(
-                                        color: Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                    // TODO: connect API to populate quick searches
-                                  ],
+                        child: ListView.separated(
+                          controller: _chipScrollCtrl,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _quickSearches.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 10),
+                          itemBuilder: (context, index) {
+                            final q = _quickSearches[index];
+                            return GestureDetector(
+                              onTap: () => _onQuickTap(q),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
                                 ),
-                              )
-                            : ListView.separated(
-                                controller: _chipScrollCtrl,
-                                scrollDirection: Axis.horizontal,
-                                itemCount: MockDatabase.quickSearches.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(width: 10),
-                                itemBuilder: (context, index) {
-                                  final q = MockDatabase.quickSearches[index];
-                                  return GestureDetector(
-                                    onTap: () => _onQuickTap(q),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2563EB),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Text(
-                                        q,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: "Inter",
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2563EB),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Text(
+                                  q,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: "Inter",
+                                  ),
+                                ),
                               ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -312,35 +346,25 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Categories Grid - Using shrinkWrap instead of Expanded
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: MockDatabase.categories.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  itemCount: _categories.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 4 / 3,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
                   ),
                   itemBuilder: (context, idx) {
-                    final cat = MockDatabase.categories[idx];
+                    final cat = _categories[idx];
+                    final categoryName = cat['name'] ?? 'Unknown';
+
                     return CategoryCard(
-                      title: cat['name'] ?? '',
+                      title: categoryName,
                       imagePath: cat['imagePath'],
-                      onTap: () {
-                        final name = cat['name'] ?? '';
-                        if (widget.onNavigateToSearch != null) {
-                          widget.onNavigateToSearch!(name);
-                          return;
-                        }
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SearchPage(initialQuery: name),
-                          ),
-                        );
-                      },
+                      onTap: () => _onCategoryTap(categoryName),
                     );
                   },
                 ),
@@ -354,7 +378,8 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const LegalPage()),
+                          MaterialPageRoute(
+                              builder: (_) => const LegalPage()),
                         );
                       },
                       child: const Text(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'main_scaffold.dart';
 import '../pages/splash_page.dart';
 
 class DeepSeekApp extends StatelessWidget {
