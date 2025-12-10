@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/category_card.dart';
+import '../services/services.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
-import '../data/mock_database.dart';
 
-//comment
 class HomePage extends StatefulWidget {
   final void Function(String)? onNavigateToSearch;
   const HomePage({super.key, this.onNavigateToSearch});
@@ -17,8 +16,45 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _chipScrollCtrl = ScrollController();
 
-  // ✅ Use mock categories instead of API
-  List<dynamic> _categories = MockDatabase.categories;
+  // Hardcoded categories that will be used to search backend
+  final List<Map<String, String>> _categories = [
+    {
+      'name': 'Groceries',
+      'imagePath': 'assets/images/groceries.jpg',
+    },
+    {
+      'name': 'Electronics',
+      'imagePath': 'assets/images/electronics.jpg',
+    },
+    {
+      'name': 'Health & Wellness',
+      'imagePath': 'assets/images/health.jpg',
+    },
+    {
+      'name': 'Cleaning & Household',
+      'imagePath': 'assets/images/cleaning.jpg',
+    },
+    {
+      'name': 'Personal Care',
+      'imagePath': 'assets/images/personal-care.jpg',
+    },
+    {
+      'name': 'Stationery',
+      'imagePath': 'assets/images/stationery.jpg',
+    },
+  ];
+
+  // Hardcoded quick search terms
+  final List<String> _quickSearches = [
+    'Milk',
+    'Rice',
+    'Bread',
+    'Eggs',
+    'Chicken',
+    'Oil',
+    'Tomato',
+    'Sugar'
+  ];
 
   @override
   void initState() {
@@ -58,6 +94,23 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SearchPage(initialQuery: q)),
+    );
+  }
+
+  void _onCategoryTap(String categoryName) {
+    // When category is tapped, search backend for products matching that category
+    if (widget.onNavigateToSearch != null) {
+      widget.onNavigateToSearch!(categoryName);
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchPage(
+          initialQuery: categoryName,
+        ),
+      ),
     );
   }
 
@@ -218,19 +271,11 @@ class _HomePageState extends State<HomePage> {
                         child: ListView.separated(
                           controller: _chipScrollCtrl,
                           scrollDirection: Axis.horizontal,
-                          itemCount: 6,
+                          itemCount: _quickSearches.length,
                           separatorBuilder: (_, __) =>
                               const SizedBox(width: 10),
                           itemBuilder: (context, index) {
-                            final quickSearches = [
-                              'Milk',
-                              'Rice',
-                              'Bread',
-                              'Eggs',
-                              'Chicken',
-                              'Oil'
-                            ];
-                            final q = quickSearches[index];
+                            final q = _quickSearches[index];
                             return GestureDetector(
                               onTap: () => _onQuickTap(q),
                               child: Container(
@@ -250,38 +295,10 @@ class _HomePageState extends State<HomePage> {
                                     fontFamily: "Inter",
                                   ),
                                 ),
-                              )
-                            : ListView.separated(
-                                controller: _chipScrollCtrl,
-                                scrollDirection: Axis.horizontal,
-                                itemCount: MockDatabase.quickSearches.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(width: 10),
-                                itemBuilder: (context, index) {
-                                  final q = MockDatabase.quickSearches[index];
-                                  return GestureDetector(
-                                    onTap: () => _onQuickTap(q),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2563EB),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Text(
-                                        q,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: "Inter",
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
                               ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -347,20 +364,7 @@ class _HomePageState extends State<HomePage> {
                     return CategoryCard(
                       title: categoryName,
                       imagePath: cat['imagePath'],
-                      onTap: () {
-                        if (widget.onNavigateToSearch != null) {
-                          widget.onNavigateToSearch!(categoryName);
-                          return;
-                        }
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SearchPage(
-                              initialCategory: categoryName,
-                            ),
-                          ),
-                        );
-                      },
+                      onTap: () => _onCategoryTap(categoryName),
                     );
                   },
                 ),
