@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/mock_database.dart';
+import '../services/services.dart';
 
 // --- Styling Constants ---
 const Color _primaryColor = Color(0xFF2563EB);
@@ -24,7 +24,7 @@ class FilterPage extends StatefulWidget {
 }
 
 class _FilterPageState extends State<FilterPage> {
-  // Mock data for filter options
+  // Filter options from API
   final List<String> _retailers = [
     'Woolworths',
     'Checkers',
@@ -37,15 +37,13 @@ class _FilterPageState extends State<FilterPage> {
     'Best Value',
     'Most Popular',
   ];
+  List<dynamic> _categories = [];
+  bool _loadingCategories = false;
 
   // Local state variables for selections
   String? _selectedRetailer;
   String? _selectedCategory;
   late String _selectedSort = 'none';
-
-  // REMOVED: Controllers for Price Range
-  // REMOVED: late TextEditingController _minPriceCtrl;
-  // REMOVED: late TextEditingController _maxPriceCtrl;
 
   @override
   void initState() {
@@ -60,16 +58,25 @@ class _FilterPageState extends State<FilterPage> {
     } else if (widget.initialSort == 'high') {
       _selectedSort = 'High → Low';
     } else {
-      _selectedSort =
-          'none'; // // Set initial state to 'none' if not a price sort
+      _selectedSort = 'none';
     }
 
-    // REMOVED: Price Controller initialization
-
-  
+    _loadCategories();
   }
 
-  // REMOVED: dispose() method is no longer needed to dispose of price controllers
+  Future<void> _loadCategories() async {
+    setState(() => _loadingCategories = true);
+    try {
+      final categories = await ApiService.getCategories();
+      setState(() {
+        _categories = categories;
+        _loadingCategories = false;
+      });
+    } catch (e) {
+      setState(() => _loadingCategories = false);
+      debugPrint('Error loading categories: $e');
+    }
+  }
 
   // Helper method to build the filter chips
   Widget _buildChipGroup({
@@ -77,7 +84,6 @@ class _FilterPageState extends State<FilterPage> {
     required List<String> options,
     required bool Function(String) isSelected,
     required void Function(String) onSelected,
-    bool multiSelect = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,9 +203,11 @@ class _FilterPageState extends State<FilterPage> {
                 // --- CATEGORY ---
                 _buildChipGroup(
                   title: 'Category',
-                  options: MockDatabase.categories
-                      .map((c) => c['name'] as String)
-                      .toList(),
+                  options: _loadingCategories
+                      ? []
+                      : _categories
+                          .map((c) => c['name']?.toString() ?? 'Unknown')
+                          .toList(),
                   isSelected: (option) => option == _selectedCategory,
                   onSelected: (option) {
                     setState(() {

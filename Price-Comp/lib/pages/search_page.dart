@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/mock_database.dart';
+import '../services/services.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_placeholder.dart';
@@ -15,7 +15,8 @@ const Color _lightTextColor = Color(0xFFFFFFFF);
 
 class SearchPage extends StatefulWidget {
   final String initialQuery;
-  const SearchPage({super.key, this.initialQuery = ''});
+  final String? initialCategory;
+  const SearchPage({super.key, this.initialQuery = '', this.initialCategory});
 
   @override
   _SearchPageState createState() => _SearchPageState();
@@ -26,13 +27,12 @@ class _SearchPageState extends State<SearchPage> {
   List<Product> _results = [];
   bool _loading = false;
   String? _error;
+  // Map of productId -> price parsed from API
+  final Map<String, double> _priceMap = {};
 
   // State variables for Filtering and Sorting
   String _sort = 'none';
   String? _filterCategory;
-  // Price range variables are kept but will only be set to null by FilterPage
-  double? _filterMinPrice;
-  double? _filterMaxPrice;
 
   String? _selectedQuickSearch;
 
@@ -52,8 +52,15 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     debugPrint('[SearchPage] started');
 
-    _ctrl = TextEditingController(text: widget.initialQuery);
+    // Initialize text controller with query or category name (but NOT both)
+    final displayText = widget.initialQuery.isNotEmpty 
+        ? widget.initialQuery 
+        : (widget.initialCategory ?? '');
+    _ctrl = TextEditingController(text: displayText);
     _ctrl.addListener(() => setState(() {}));
+    
+    // Set initial category filter if provided
+    _filterCategory = widget.initialCategory;
 
     // Listen for scroll position changes to show/hide arrow buttons
     _quickScrollCtrl.addListener(() {
@@ -66,8 +73,8 @@ class _SearchPageState extends State<SearchPage> {
       });
     });
 
-    // Auto-run search if the page was opened with a pre-filled query
-    if (widget.initialQuery.isNotEmpty) _submitSearch();
+    // Auto-run search if the page was opened with a pre-filled query or category
+    if (widget.initialQuery.isNotEmpty || widget.initialCategory != null) _submitSearch();
   }
 
   @override
@@ -81,10 +88,10 @@ class _SearchPageState extends State<SearchPage> {
 
   // --- Search and Filter Logic ---
   Future<void> _submitSearch({bool fail = false}) async {
-    final query = _cleanQuery(_ctrl.text); // Use the helper here
+    final query = _cleanQuery(_ctrl.text);
 
-    // If query is empty after cleaning, clear results and return
-    if (query.isEmpty) {
+    // If query is empty and no category filter, clear results and return
+    if (query.isEmpty && (_filterCategory == null || _filterCategory!.isEmpty)) {
       setState(() {
         _results = [];
         _loading = false;
@@ -99,24 +106,49 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
-      final res = await MockDatabase.searchProducts(_ctrl.text, fail: fail);
-      List<Product> withPrices = res;
+      late dynamic res;
+      
+      // Use category-specific endpoint if we have a category and no search query
+      if (query.isEmpty && _filterCategory != null && _filterCategory!.isNotEmpty) {
+        res = await ApiService.getProductsByCategory(_filterCategory!);
+      } else {
+        // Use general search endpoint
+        res = await ApiService.searchProducts(_ctrl.text);
+      }
+      
+      List<Product> products = [];
+      
+      // Parse response to Product objects
+      if (res is List) {
+        for (var item in res) {
+          if (item is Map<String, dynamic>) {
+            final id = item['_id']?.toString() ?? item['id']?.toString() ?? 'unknown';
+            final parsedPrice = _parsePrice(item['price']) ?? 0.0;
 
-      // Apply category filter
-      if (_filterCategory != null && _filterCategory!.isNotEmpty) {
+            final product = Product(
+              id: id,
+              name: item['productName'] ?? item['name'] ?? 'Unknown Product',
+              size: item['size'] ?? 'N/A',
+              // Backend provides productImageURL - may already be proxy URL or raw URL
+              image: item['productImageURL'] ?? item['image'] ?? item['imageURL'] ?? '',
+              category: item['category'] ?? 'Unknown',
+              retailerId: item['retailer'] ?? 'Unknown',
+              productUrl: item['productURL'] ?? item['url'],
+            );
+
+            products.add(product);
+            _priceMap[id] = parsedPrice;
+          }
+        }
+      }
+
+      List<Product> withPrices = products;
+
+      // Apply category filter (only if we searched with a query)
+      if (query.isNotEmpty && _filterCategory != null && _filterCategory!.isNotEmpty) {
         withPrices = withPrices
             .where((p) => p.category == _filterCategory)
             .toList();
-      }
-
-      // Price Range Filter logic is kept, but since FilterPage always passes null, it's effectively disabled
-      if (_filterMinPrice != null || _filterMaxPrice != null) {
-        withPrices = withPrices.where((p) {
-          final price = MockDatabase.getMockPrice(p.id);
-          final okMin = _filterMinPrice == null || price >= _filterMinPrice!;
-          final okMax = _filterMaxPrice == null || price <= _filterMaxPrice!;
-          return okMin && okMax;
-        }).toList();
       }
 
       setState(() {
@@ -125,6 +157,7 @@ class _SearchPageState extends State<SearchPage> {
       });
     } catch (e) {
       setState(() => _error = e.toString());
+      debugPrint('Search error: $e');
     } finally {
       setState(() => _loading = false);
     }
@@ -142,35 +175,44 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  /// Get retailer ID for a product (matches ProductCard's display logic)
-  String _getRetailerIdForProduct(String productId) {
-    const retailers = [
-      'r2',
-      'r1',
-      'r3',
-      'r4',
-    ]; // Checkers, Pick n Pay, Woolworths, Shoprite
-    final index = productId.hashCode % retailers.length;
-    return retailers[index];
-  }
-
   /// Sorts results based on selected sort type
   void _sortResults() {
     setState(() {
       if (_sort == 'low') {
-        _results.sort(
-          (a, b) => MockDatabase.getMockPrice(
-            a.id,
-          ).compareTo(MockDatabase.getMockPrice(b.id)),
-        );
+        _results.sort((a, b) {
+          double priceA = _extractPrice(a);
+          double priceB = _extractPrice(b);
+          return priceA.compareTo(priceB);
+        });
       } else if (_sort == 'high') {
-        _results.sort(
-          (a, b) => MockDatabase.getMockPrice(
-            b.id,
-          ).compareTo(MockDatabase.getMockPrice(a.id)),
-        );
+        _results.sort((a, b) {
+          double priceA = _extractPrice(a);
+          double priceB = _extractPrice(b);
+          return priceB.compareTo(priceA);
+        });
       }
     });
+  }
+
+  double _extractPrice(Product product) {
+    return _priceMap[product.id] ?? 0.0;
+  }
+
+  /// Parse a dynamic price value from the API into a double.
+  double? _parsePrice(dynamic price) {
+    if (price == null) return null;
+    try {
+      if (price is double) return price;
+      if (price is int) return price.toDouble();
+      if (price is String) {
+        final cleaned = price.replaceAll(RegExp(r'[^0-9.]'), '');
+        if (cleaned.isEmpty) return null;
+        return double.parse(cleaned);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   // --- Filter Page Navigation (UPDATED) ---
@@ -190,8 +232,6 @@ class _SearchPageState extends State<SearchPage> {
     if (results != null) {
       setState(() {
         _filterCategory = results['category'];
-        _filterMinPrice = results['minPrice'];
-        _filterMaxPrice = results['maxPrice'];
         _sort = results['sort'];
       });
       _submitSearch();
@@ -415,34 +455,23 @@ class _SearchPageState extends State<SearchPage> {
                     // sit on the page background and do not overlap chip text)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 28),
-                      child: MockDatabase.quickSearches.isEmpty
-                          ? Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Icon(
-                                    Icons.info_outline,
-                                    size: 18,
-                                    color: Color(0xFF6B7280),
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'No quick searches',
-                                    style: TextStyle(color: Color(0xFF6B7280)),
-                                  ),
-                                  // TODO: connect API to populate quick searches
-                                ],
-                              ),
-                            )
-                          : ListView.separated(
-                              controller: _quickScrollCtrl,
-                              scrollDirection: Axis.horizontal,
-                              itemCount: MockDatabase.quickSearches.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 10),
-                              itemBuilder: (context, index) =>
-                                  _quickChip(MockDatabase.quickSearches[index]),
-                            ),
+                      child: ListView.separated(
+                        controller: _quickScrollCtrl,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 6,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final quickSearches = [
+                            'Milk',
+                            'Rice',
+                            'Bread',
+                            'Eggs',
+                            'Chicken',
+                            'Oil'
+                          ];
+                          return _quickChip(quickSearches[index]);
+                        },
+                      ),
                     ),
 
                     // LEFT ARROW
@@ -524,9 +553,7 @@ class _SearchPageState extends State<SearchPage> {
                       TextButton(
                         onPressed: () {
                           setState(() {
-                            _filterCategory = null;
-                            _filterMinPrice = null; // Clear all
-                            _filterMaxPrice = null; // Clear all
+                            _filterCategory = null;// Clear all
                             _sort = 'none';
                           });
                           _submitSearch();
@@ -717,7 +744,7 @@ class _SearchPageState extends State<SearchPage> {
                           itemCount: _results.length,
                           itemBuilder: (context, idx) {
                             final p = _results[idx];
-                            final price = MockDatabase.getMockPrice(p.id);
+                            final price = _priceMap[p.id] ?? 0.0; // Price from API
                             return ProductCard(
                               product: p,
                               price: price,

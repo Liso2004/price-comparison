@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../data/mock_database.dart';
 import '../widgets/category_card.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
+import '../data/mock_database.dart';
 
 //comment
 class HomePage extends StatefulWidget {
@@ -16,6 +16,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _chipScrollCtrl = ScrollController();
+
+  // ✅ Use mock categories instead of API
+  List<dynamic> _categories = MockDatabase.categories;
 
   @override
   void initState() {
@@ -207,7 +210,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Quick Search Chips with Scroll Arrow
                 Row(
                   children: [
                     Expanded(
@@ -216,11 +218,19 @@ class _HomePageState extends State<HomePage> {
                         child: ListView.separated(
                           controller: _chipScrollCtrl,
                           scrollDirection: Axis.horizontal,
-                          itemCount: MockDatabase.quickSearches.length,
+                          itemCount: 6,
                           separatorBuilder: (_, __) =>
                               const SizedBox(width: 10),
                           itemBuilder: (context, index) {
-                            final q = MockDatabase.quickSearches[index];
+                            final quickSearches = [
+                              'Milk',
+                              'Rice',
+                              'Bread',
+                              'Eggs',
+                              'Chicken',
+                              'Oil'
+                            ];
+                            final q = quickSearches[index];
                             return GestureDetector(
                               onTap: () => _onQuickTap(q),
                               child: Container(
@@ -291,32 +301,35 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Categories Grid - Using shrinkWrap instead of Expanded
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: MockDatabase.categories.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  itemCount: _categories.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 4 / 3,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
                   ),
                   itemBuilder: (context, idx) {
-                    final cat = MockDatabase.categories[idx];
+                    final cat = _categories[idx];
+                    final categoryName = cat['name'] ?? 'Unknown';
+
                     return CategoryCard(
-                      title: cat['name'] ?? '',
+                      title: categoryName,
                       imagePath: cat['imagePath'],
                       onTap: () {
-                        final name = cat['name'] ?? '';
                         if (widget.onNavigateToSearch != null) {
-                          widget.onNavigateToSearch!(name);
+                          widget.onNavigateToSearch!(categoryName);
                           return;
                         }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => SearchPage(initialQuery: name),
+                            builder: (_) => SearchPage(
+                              initialCategory: categoryName,
+                            ),
                           ),
                         );
                       },
@@ -333,7 +346,8 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const LegalPage()),
+                          MaterialPageRoute(
+                              builder: (_) => const LegalPage()),
                         );
                       },
                       child: const Text(

@@ -38,10 +38,48 @@ class ProductCard extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Icon(
-                  Icons.shopping_bag,
-                  size: 40,
-                  color: Colors.grey,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Builder(builder: (context) {
+                    final img = product.image;
+                    if (img.isEmpty) {
+                      return const Center(
+                        child: Icon(
+                          Icons.shopping_bag,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
+                      );
+                    }
+
+                    // Network image if looks like a URL
+                    if (img.startsWith('http')) {
+                      return Image.network(
+                        img,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(
+                          child: Icon(
+                            Icons.shopping_bag,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Otherwise try asset
+                    return Image.asset(
+                      img,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(
+                          Icons.shopping_bag,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ),
               const SizedBox(height: 5),
@@ -101,7 +139,18 @@ class ProductCard extends StatelessWidget {
         'r3': 'Woolworths',
         'r4': 'Shoprite',
       };
-      return retailerMap[product.retailerId] ?? 'Unknown';
+      final val = product.retailerId!;
+      // If value is a known short id, map it
+      if (retailerMap.containsKey(val)) return retailerMap[val]!;
+      // If value already looks like a full retailer name, return it
+      if (retailerMap.containsValue(val)) return val;
+      // Case-insensitive match to known names
+      final lower = val.toLowerCase();
+      for (final name in retailerMap.values) {
+        if (name.toLowerCase() == lower) return name;
+      }
+      // Otherwise return the raw value (best-effort)
+      return val;
     }
     // Fallback to retailerId parameter (for backward compatibility)
     if (retailerId != null) {
@@ -111,7 +160,14 @@ class ProductCard extends StatelessWidget {
         'r3': 'Woolworths',
         'r4': 'Shoprite',
       };
-      return retailerMap[retailerId] ?? 'Unknown';
+      final val = retailerId!;
+      if (retailerMap.containsKey(val)) return retailerMap[val]!;
+      if (retailerMap.containsValue(val)) return val;
+      final lower = val.toLowerCase();
+      for (final name in retailerMap.values) {
+        if (name.toLowerCase() == lower) return name;
+      }
+      return val;
     }
     // Last fallback: use hash (for old products without retailer info)
     final retailers = ['Checkers', 'Pick n Pay', 'Woolworths', 'Shoprite'];

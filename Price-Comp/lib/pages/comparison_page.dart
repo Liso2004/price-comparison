@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../data/mock_database.dart';
+import '../services/services.dart';
 import '../models/product.dart';
 import '../models/retailer_price.dart';
 import '../widgets/retailer_placeholder.dart';
+
+// --- NEW CONSTANT KEYWORD LIST ---
+// You will need to populate this list with the common, short, and accurate 
+// keywords that your backend search index is built around.
+const List<String> _PRODUCT_KEYWORDS = [
+  'milk', // Example for dairy
+  'bread', // Example for bakery
+  'eggs', // Example for perishables
+  'cola', // Example for soft drinks
+  'soup', // Example for canned goods
+];
+// ---------------------------------
 
 class ComparisonPage extends StatefulWidget {
   final Product product;
@@ -21,11 +33,12 @@ class ComparisonPage extends StatefulWidget {
 class _ComparisonPageState extends State<ComparisonPage>
     with SingleTickerProviderStateMixin {
   List<RetailerPrice> _prices = [];
+  // Map of retailer -> product data for that retailer
+  final Map<String, Product> _retailerProducts = {};
   bool _loading = true;
   String? _error;
   Set<String> selectedRetailers = {}; // Empty by default - no auto-selection
   late AnimationController _shimmerController;
-  bool _isInitialLoad = true;
 
   @override
   void initState() {
@@ -44,7 +57,7 @@ class _ComparisonPageState extends State<ComparisonPage>
     } else {
       // If no retailer specified, select all retailers by default
       selectedRetailers.addAll(
-        MockDatabase.retailers.map((r) => r['id']!).toList(),
+        ['Pick n Pay', 'Checkers', 'Woolworths', 'Shoprite'],
       );
     }
     _loadComparison();
@@ -56,16 +69,21 @@ class _ComparisonPageState extends State<ComparisonPage>
     debugPrint('[ComparisonPage] stopped for ${widget.product.id}');
     super.dispose();
   }
+  
+  // --- CORE FUNCTIONS ---
 
+  // 1. Initial Load/Refresh function
   Future<void> _loadComparison({
-    bool partial = false,
-    bool fail = false,
     bool isRefresh = false,
   }) async {
+    // Clear old data and set loading state
     setState(() {
       _loading = true;
       _error = null;
-      // UPDATED: On refresh - reset to initial retailer selection
+      _prices.clear();
+      _retailerProducts.clear();
+
+      // Reset retailer selection only if refreshing, otherwise keep the current selection
       if (isRefresh) {
         selectedRetailers.clear();
         if (widget.initialRetailerId != null) {
@@ -73,29 +91,200 @@ class _ComparisonPageState extends State<ComparisonPage>
         } else {
           // If no initial retailer, select all
           selectedRetailers.addAll(
-            MockDatabase.retailers.map((r) => r['id']!).toList(),
+            ['Pick n Pay', 'Checkers', 'Woolworths', 'Shoprite'],
           );
         }
-        _prices = [];
-        _isInitialLoad = false;
       }
     });
+
     try {
-      final res = await MockDatabase.getComparison(
-        widget.product.id,
-        partial: partial,
-        fail: fail,
-      );
-      setState(() {
-        _prices = res;
-        _isInitialLoad = false;
-      });
+      final retailers = ['Pick n Pay', 'Checkers', 'Woolworths', 'Shoprite'];
+
+      // Use Future.wait to load all products in parallel
+      final futures = retailers.map((retailer) {
+        // Pass isInitialLoad: true to prevent multiple setState calls during startup
+        return _searchRetailerProduct(retailer, isInitialLoad: true);
+      }).toList();
+
+      // Wait for all searches to complete
+      await Future.wait(futures);
     } catch (e) {
       setState(() => _error = e.toString());
+      debugPrint('Comparison load error: $e');
     } finally {
+      // Final setState to ensure UI updates when all loading is complete
       setState(() => _loading = false);
     }
   }
+
+  // 2. UPDATED Search function to use one of the predefined keywords
+  Future<void> _searchRetailerProduct(String retailerId, {bool isInitialLoad = false}) async {
+    
+    // --- UPDATED KEYWORD EXTRACTION LOGIC ---
+    String searchName = widget.product.name;
+    String? finalSearchTerm;
+    
+    // 1. Check if the product name contains any of the defined keywords.
+    final originalNameLower = searchName.toLowerCase();
+    for (var keyword in _PRODUCT_KEYWORDS) {
+      if (originalNameLower.contains(keyword)) {
+        finalSearchTerm = keyword;
+        debugPrint('[Search Debug] Found matching keyword: $finalSearchTerm');
+        break; 
+      }
+    }
+    
+    // 2. If no keyword is found, fall back to the broad search (first three words)
+    if (finalSearchTerm == null) {
+      final words = searchName.split(' ');
+      if (words.length > 3) {
+        finalSearchTerm = words.sublist(0, 3).join(' ');
+        debugPrint('[Search Debug] Falling back to broad search: $finalSearchTerm');
+      } else {
+        finalSearchTerm = searchName;
+        debugPrint('[Search Debug] Searching with full name: $finalSearchTerm');
+      }
+    }
+    searchName = finalSearchTerm;
+    // ----------------------------------------
+    
+    debugPrint('[ComparisonPage] Searching for product in retailer: $retailerId (Initial Load: $isInitialLoad)');
+    
+    try {
+      // Use the new determined searchName
+      final searchResults = await ApiService.searchProductsByNameAndRetailer(
+        productName: searchName,
+        retailerName: retailerId,
+      );
+
+      final retailerResults = searchResults.where((item) => item is Map<String, dynamic>).toList();
+      
+      if (retailerResults.isNotEmpty) {
+        final item = retailerResults.first;
+        final price = _parsePrice(item['price']);
+        
+        // Prepare the new product objects
+        final newRetailerPrice = RetailerPrice(
+          retailerId: retailerId,
+          retailerName: retailerId,
+          price: price,
+          productUrl: item['productURL'] ?? item['url'],
+        );
+
+        final newProduct = Product(
+          id: item['_id']?.toString() ?? item['id']?.toString() ?? 'unknown',
+          name: item['productName'] ?? item['name'] ?? 'Unknown Product',
+          size: item['size'] ?? 'N/A',
+          image: item['productImageURL'] ?? item['image'] ?? '',
+          category: item['category'] ?? 'Unknown',
+          retailerId: retailerId,
+          productUrl: item['productURL'] ?? item['url'],
+        );
+
+        // Update state with the found product data
+        if (!isInitialLoad) {
+          setState(() {
+            _prices.removeWhere((p) => p.retailerId == retailerId);
+            _prices.add(newRetailerPrice);
+            _retailerProducts[retailerId] = newProduct;
+          });
+          debugPrint('[ComparisonPage] Price loaded (Chip Click): ${newRetailerPrice.retailerName} - R${newRetailerPrice.price}');
+        } else {
+           // During initial load, just update the data structures
+           _prices.removeWhere((p) => p.retailerId == retailerId);
+           _prices.add(newRetailerPrice);
+           _retailerProducts[retailerId] = newProduct;
+           debugPrint('[ComparisonPage] Price loaded (Initial): ${newRetailerPrice.retailerName} - R${newRetailerPrice.price}');
+        }
+        
+      } else {
+        debugPrint('[ComparisonPage] No product found for $retailerId');
+        // Clear old entry if no product is found for this retailer upon search
+        if (!isInitialLoad) {
+           setState(() {
+             _prices.removeWhere((p) => p.retailerId == retailerId);
+             _retailerProducts.remove(retailerId);
+           });
+           if(mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                 content: Text('No similar product found at $retailerId'),
+                 backgroundColor: Colors.orange,
+               ),
+             );
+           }
+        }
+      }
+    } catch (e) {
+      debugPrint('[ComparisonPage] Error searching $retailerId: $e');
+      if (!isInitialLoad && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error searching at $retailerId: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 3. Price parsing helper
+  double? _parsePrice(dynamic price) {
+    if (price == null) return null;
+    try {
+      if (price is double) return price;
+      if (price is int) return price.toDouble();
+      if (price is String) {
+        // This handles "R99.99" and similar formats
+        final cleaned = price.replaceAll(RegExp(r'[^0-9.]'), '');
+        return double.parse(cleaned);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 4. Chip building logic
+  List<Widget> _buildRetailerChips() {
+    const retailers = [
+      {'id': 'Pick n Pay', 'name': 'Pick n Pay'},
+      {'id': 'Checkers', 'name': 'Checkers'},
+      {'id': 'Woolworths', 'name': 'Woolworths'},
+      {'id': 'Shoprite', 'name': 'Shoprite'},
+    ];
+
+    return retailers.map((r) {
+      final id = r['id']!;
+      final name = r['name']!;
+      final sel = selectedRetailers.contains(id);
+      final isInitialRetailer = id == widget.initialRetailerId;
+
+      return FilterChip(
+        label: Text(name),
+        selected: sel,
+        backgroundColor:
+            isInitialRetailer ? const Color(0xFFEFF6FF) : null,
+        selectedColor: isInitialRetailer ? const Color(0xFF2563EB) : null,
+        onSelected: (v) async {
+          setState(() {
+            if (v) {
+              selectedRetailers.add(id);
+            } else {
+              selectedRetailers.remove(id);
+            }
+          });
+          
+          // Only trigger a new product search if the chip is selected (v == true)
+          // AND we don't already have the product data cached for this retailer.
+          if (v && !_retailerProducts.containsKey(id)) {
+            await _searchRetailerProduct(id);
+          }
+        },
+      );
+    }).toList();
+  }
+
 
   double? getBestPrice() {
     final prices = _prices
@@ -125,10 +314,10 @@ class _ComparisonPageState extends State<ComparisonPage>
     String? productUrl,
   }) async {
     final Map<String, String> retailerWebsites = {
-      'r1': 'https://www.pnp.co.za',
-      'r2': 'https://www.checkers.co.za',
-      'r3': 'https://www.woolworths.co.za',
-      'r4': 'https://www.shoprite.co.za',
+      'Pick n Pay': 'https://www.pnp.co.za',
+      'Checkers': 'https://www.checkers.co.za',
+      'Woolworths': 'https://www.woolworths.co.za',
+      'Shoprite': 'https://www.shoprite.co.za',
     };
 
     // Use product URL if available, otherwise fall back to retailer website
@@ -157,6 +346,55 @@ class _ComparisonPageState extends State<ComparisonPage>
         );
       }
     }
+  }
+
+  /// Helper to get the retailer name (simple lookup since ID and name are the same strings here)
+  String _getRetailerName(String retailerId) {
+    return retailerId;
+  }
+
+  /// Build product image widget with fallback
+  Widget _buildProductImage({double size = 120, Product? product}) {
+    final productToDisplay = product ?? widget.product;
+    final img = productToDisplay.image;
+    
+    if (img.isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.shopping_bag,
+          size: 40,
+          color: Colors.grey,
+        ),
+      );
+    }
+
+    // Network image if looks like a URL
+    if (img.startsWith('http')) {
+      return Image.network(
+        img,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(
+          child: Icon(
+            Icons.shopping_bag,
+            size: 40,
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+    // Otherwise try asset
+    return Image.asset(
+      img,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const Center(
+        child: Icon(
+          Icons.shopping_bag,
+          size: 40,
+          color: Colors.grey,
+        ),
+      ),
+    );
   }
 
   @override
@@ -216,36 +454,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ? _buildFilterChipsPlaceholder()
                     : Wrap(
                         spacing: 8,
-                        children: MockDatabase.retailers.map((r) {
-                          final id = r['id']!;
-                          final name = r['name']!;
-                          final sel = selectedRetailers.contains(id);
-                          // NEW: Check if this is the initial retailer
-                          final isInitialRetailer =
-                              id == widget.initialRetailerId;
-                          return FilterChip(
-                            label: Text(name),
-                            selected: sel,
-                            // NEW: Visual highlighting for initial retailer
-                            backgroundColor: isInitialRetailer
-                                ? const Color(
-                                    0xFFEFF6FF,
-                                  ) // Light blue background
-                                : null,
-                            selectedColor: isInitialRetailer
-                                ? const Color(
-                                    0xFF2563EB,
-                                  ) // Darker blue when selected
-                                : null,
-                            onSelected: (v) => setState(() {
-                              if (v) {
-                                selectedRetailers.add(id);
-                              } else {
-                                selectedRetailers.remove(id);
-                              }
-                            }),
-                          );
-                        }).toList(),
+                        children: _buildRetailerChips(),
                       ),
               ),
               const SizedBox(height: 12),
@@ -317,19 +526,41 @@ class _ComparisonPageState extends State<ComparisonPage>
   // Product Card (Normal State)
   Widget _buildProductCard() {
     final bestPrice = getBestPrice();
-    final hasBestPrice = bestPrice != null;
+    final filteredPrices = _getFilteredPrices();
 
-    // Find the retailer with the best price
-    final bestRetailerPrice = _getFilteredPrices().firstWhere(
-      (p) => p.price != null && p.price == bestPrice,
-      orElse: () => _prices.firstWhere(
-        (p) => p.price != null,
-        orElse: () => _prices.first,
-      ),
-    );
+    // Handle case where filteredPrices might be empty or only contain null prices
+    if (filteredPrices.isEmpty) {
+        // Fallback to displaying the original product details if no retailer data is available
+        return _buildProductPlaceholder(); 
+    }
 
-    final bestRetailerName = _getRetailerName(bestRetailerPrice.retailerId);
-    final bestRetailerId = bestRetailerPrice.retailerId;
+    // Determine which retailer to display
+    RetailerPrice displayRetailerPrice;
+    
+    if (selectedRetailers.length == 1) {
+      // Single retailer selected - show that one
+      final selectedRetailerId = selectedRetailers.first;
+      displayRetailerPrice = filteredPrices.firstWhere(
+        (p) => p.retailerId == selectedRetailerId,
+        orElse: () => filteredPrices.first,
+      );
+    } else {
+      // Multiple retailers selected - show best price
+      // Need a price entry to display a card, so find the lowest priced one available
+      displayRetailerPrice = filteredPrices.firstWhere(
+        (p) => p.price != null && p.price == bestPrice,
+        orElse: () => filteredPrices.firstWhere(
+          (p) => selectedRetailers.contains(p.retailerId),
+          orElse: () => _prices.isNotEmpty ? _prices.first : RetailerPrice(retailerId: 'N/A', retailerName: 'N/A', price: null, productUrl: null),
+        ),
+      );
+    }
+
+    final bestRetailerName = _getRetailerName(displayRetailerPrice.retailerId);
+    final bestRetailerId = displayRetailerPrice.retailerId;
+    
+    // Get the product from this retailer (or use original if not found)
+    final displayProduct = _retailerProducts[bestRetailerId] ?? widget.product;
 
     return Stack(
       children: [
@@ -357,10 +588,10 @@ class _ComparisonPageState extends State<ComparisonPage>
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(8),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/product_image.png'),
-                      fit: BoxFit.cover,
-                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: _buildProductImage(product: displayProduct),
                   ),
                 ),
               ),
@@ -380,13 +611,15 @@ class _ComparisonPageState extends State<ComparisonPage>
 
               // Product Name
               Text(
-                widget.product.name,
+                displayProduct.name,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF3D3D3D),
                   fontFamily: 'Inter',
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
 
@@ -403,11 +636,11 @@ class _ComparisonPageState extends State<ComparisonPage>
 
               // Price
               Text(
-                hasBestPrice
-                    ? 'R ${bestPrice!.toStringAsFixed(2)}'
+                displayRetailerPrice.price != null
+                    ? 'R ${displayRetailerPrice.price!.toStringAsFixed(2)}'
                     : 'Price not available',
                 style: TextStyle(
-                  color: hasBestPrice ? const Color(0xFF2563EB) : Colors.grey,
+                  color: displayRetailerPrice.price != null ? const Color(0xFF2563EB) : Colors.grey,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Inter',
@@ -428,11 +661,11 @@ class _ComparisonPageState extends State<ComparisonPage>
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: hasBestPrice
+                        onTap: displayRetailerPrice.price != null
                             ? () => _launchRetailerWebsite(
-                                bestRetailerId,
-                                productUrl: bestRetailerPrice.productUrl,
-                              )
+                                  bestRetailerId,
+                                  productUrl: displayRetailerPrice.productUrl ?? '',
+                                )
                             : null,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
@@ -443,7 +676,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                           child: Text(
                             'PROCEED TO BUY',
                             style: TextStyle(
-                              color: hasBestPrice
+                              color: displayRetailerPrice.price != null
                                   ? Colors.white
                                   : Colors.white.withOpacity(0.5),
                               fontSize: 14,
@@ -461,8 +694,10 @@ class _ComparisonPageState extends State<ComparisonPage>
           ),
         ),
 
-        // Lowest Price Badge - Top Right Corner
-        if (hasBestPrice)
+        // Lowest Price Badge - Top Right Corner (only if this retailer has the best price)
+        if (displayRetailerPrice.price != null && 
+            bestPrice != null && 
+            (displayRetailerPrice.price! - bestPrice).abs() < 0.001)
           Positioned(
             top: 12,
             right: 12,
@@ -513,8 +748,12 @@ class _ComparisonPageState extends State<ComparisonPage>
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: shimmerColor,
+                        color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _buildProductImage(),
                       ),
                     ),
                   ),
@@ -668,20 +907,11 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   Widget _buildRetailerCard(RetailerPrice price, bool isBest) {
-    // Updated retailer mapping with Shoprite
-    final Map<String, Map<String, String>> retailerMapping = {
-      'r1': {'logo': 'assets/picknpay.png', 'name': 'Pick n Pay'},
-      'r2': {'logo': 'assets/checkers.png', 'name': 'Checkers'},
-      'r3': {'logo': 'assets/woolworths.png', 'name': 'Woolworths'},
-      'r4': {'logo': 'assets/shoprite.png', 'name': 'Shoprite'},
-    };
-
-    // Get retailer info from mapping
-    final retailerInfo =
-        retailerMapping[price.retailerId] ??
-        {'logo': 'assets/shoprite.png', 'name': 'Shoprite'};
-    final String logoAsset = retailerInfo['logo']!;
-    final String retailerName = retailerInfo['name']!;
+    // Get retailer name - use the stored retailer name directly
+    final String retailerName = _getRetailerName(price.retailerId);
+    
+    // Get the product data for this retailer
+    final retailerProduct = _retailerProducts[price.retailerId];
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -709,10 +939,10 @@ class _ComparisonPageState extends State<ComparisonPage>
             decoration: BoxDecoration(
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: AssetImage('assets/product_image.png'),
-                fit: BoxFit.cover,
-              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: _buildProductImage(size: 70, product: retailerProduct),
             ),
           ),
           const SizedBox(width: 12),
@@ -732,9 +962,9 @@ class _ComparisonPageState extends State<ComparisonPage>
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Product Name
+                // Product Name (use retailer-specific product name if available)
                 Text(
-                  widget.product.name,
+                  retailerProduct?.name ?? widget.product.name,
                   style: const TextStyle(
                     color: Color(0xFF3D3D3D),
                     fontSize: 14,
@@ -769,10 +999,10 @@ class _ComparisonPageState extends State<ComparisonPage>
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Text(
-                'Lowest',
+                'BEST PRICE',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,
                 ),
@@ -781,20 +1011,5 @@ class _ComparisonPageState extends State<ComparisonPage>
         ],
       ),
     );
-  }
-
-  String _getRetailerName(String retailerId) {
-    switch (retailerId) {
-      case 'r1':
-        return 'Pick n Pay';
-      case 'r2':
-        return 'Checkers';
-      case 'r3':
-        return 'Woolworths';
-      case 'r4':
-        return 'Shoprite';
-      default:
-        return 'Shoprite';
-    }
   }
 }
