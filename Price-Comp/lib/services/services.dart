@@ -3,7 +3,8 @@ import 'dart:convert';
 
 class ApiService {
   // API Configuration
-  static const String baseUrl = 'http://127.0.0.1:8000'; // Change this to your API server URL
+  static const String baseUrl =
+      'http://192.168.3.170:8000'; // Change this to your API server URL
   static const String productsEndpoint = '/products';
   static const String categoriesEndpoint = '/categories';
   static const String retailersEndpoint = '/retailers';
@@ -11,7 +12,8 @@ class ApiService {
   static const String scrapeStartEndpoint = '/scrape/start';
   static const String scrapeResultsEndpoint = '/scrape/results';
   static const String debugReseedEndpoint = '/debug/reseed';
-  static const String fixMissingRetailersEndpoint = '/debug/fix-missing-retailers';
+  static const String fixMissingRetailersEndpoint =
+      '/debug/fix-missing-retailers';
 
   // ==========================================
   // PRODUCT ENDPOINTS
@@ -21,9 +23,7 @@ class ApiService {
   /// Returns a list of all products
   static Future<List<dynamic>> getAllProducts() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl$productsEndpoint'),
-      );
+      final response = await http.get(Uri.parse('$baseUrl$productsEndpoint'));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -67,7 +67,8 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         throw Exception(
-            'Failed to filter products by retailer: ${response.statusCode}');
+          'Failed to filter products by retailer: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error filtering by retailer: $e');
@@ -79,18 +80,22 @@ class ApiService {
   /// [retailerName] - The name of the retailer to filter by
   /// Returns a list of products matching both filters
   static Future<List<dynamic>> searchAndFilterByRetailer(
-      String searchQuery, String retailerName) async {
+    String searchQuery,
+    String retailerName,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse(
-            '$baseUrl$productsEndpoint?search=$searchQuery&retailer=$retailerName'),
+          '$baseUrl$productsEndpoint?search=$searchQuery&retailer=$retailerName',
+        ),
       );
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
         throw Exception(
-            'Failed to search and filter products: ${response.statusCode}');
+          'Failed to search and filter products: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error searching and filtering products: $e');
@@ -101,8 +106,12 @@ class ApiService {
   /// `/products/search` endpoint in the backend.
   /// [productName] - partial or full product name to search for
   /// [retailerName] - optional retailer filter
-  static Future<List<dynamic>> searchProductsByNameAndRetailer(
-      {required String productName, String? retailerName, int skip = 0, int limit = 100}) async {
+  static Future<List<dynamic>> searchProductsByNameAndRetailer({
+    required String productName,
+    String? retailerName,
+    int skip = 0,
+    int limit = 100,
+  }) async {
     try {
       final buffer = StringBuffer('$baseUrl/products/search?');
       buffer.write('product=${Uri.encodeQueryComponent(productName)}');
@@ -128,7 +137,8 @@ class ApiService {
   /// [categoryName] - The name of the category to filter by
   /// Returns a list of products in the specified category
   static Future<List<dynamic>> getProductsByCategory(
-      String categoryName) async {
+    String categoryName,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl$productsEndpoint/category/$categoryName'),
@@ -138,7 +148,8 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         throw Exception(
-            'Failed to get products by category: ${response.statusCode}');
+          'Failed to get products by category: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error getting products by category: $e');
@@ -149,7 +160,8 @@ class ApiService {
   /// [retailerName] - The name of the retailer
   /// Returns a list of products sorted by price (ascending)
   static Future<List<dynamic>> getProductsByRetailer(
-      String retailerName) async {
+    String retailerName,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl$productsEndpoint/retailer/$retailerName'),
@@ -159,7 +171,8 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         throw Exception(
-            'Failed to get products by retailer: ${response.statusCode}');
+          'Failed to get products by retailer: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error getting products by retailer: $e');
@@ -174,9 +187,7 @@ class ApiService {
   /// Returns a list of unique categories from all products
   static Future<List<dynamic>> getCategories() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl$categoriesEndpoint'),
-      );
+      final response = await http.get(Uri.parse('$baseUrl$categoriesEndpoint'));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -196,9 +207,7 @@ class ApiService {
   /// Returns a list of all unique retailers
   static Future<List<dynamic>> getRetailers() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl$retailersEndpoint'),
-      );
+      final response = await http.get(Uri.parse('$baseUrl$retailersEndpoint'));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -324,7 +333,8 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         throw Exception(
-            'Failed to fix missing retailers: ${response.statusCode}');
+          'Failed to fix missing retailers: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error fixing missing retailers: $e');
