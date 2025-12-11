@@ -6,7 +6,7 @@ import '../models/retailer_price.dart';
 import '../widgets/retailer_placeholder.dart';
 
 // --- NEW CONSTANT KEYWORD LIST ---
-// You will need to populate this list with the common, short, and accurate 
+// You will need to populate this list with the common, short, and accurate
 // keywords that your backend search index is built around.
 const List<String> _PRODUCT_KEYWORDS = [
   'milk', // Example for dairy
@@ -56,9 +56,12 @@ class _ComparisonPageState extends State<ComparisonPage>
       );
     } else {
       // If no retailer specified, select all retailers by default
-      selectedRetailers.addAll(
-        ['Pick n Pay', 'Checkers', 'Woolworths', 'Shoprite'],
-      );
+      selectedRetailers.addAll([
+        'Pick n Pay',
+        'Checkers',
+        'Woolworths',
+        'Shoprite',
+      ]);
     }
     _loadComparison();
   }
@@ -69,13 +72,11 @@ class _ComparisonPageState extends State<ComparisonPage>
     debugPrint('[ComparisonPage] stopped for ${widget.product.id}');
     super.dispose();
   }
-  
+
   // --- CORE FUNCTIONS ---
 
   // 1. Initial Load/Refresh function
-  Future<void> _loadComparison({
-    bool isRefresh = false,
-  }) async {
+  Future<void> _loadComparison({bool isRefresh = false}) async {
     // Clear old data and set loading state
     setState(() {
       _loading = true;
@@ -90,9 +91,12 @@ class _ComparisonPageState extends State<ComparisonPage>
           selectedRetailers.add(widget.initialRetailerId!);
         } else {
           // If no initial retailer, select all
-          selectedRetailers.addAll(
-            ['Pick n Pay', 'Checkers', 'Woolworths', 'Shoprite'],
-          );
+          selectedRetailers.addAll([
+            'Pick n Pay',
+            'Checkers',
+            'Woolworths',
+            'Shoprite',
+          ]);
         }
       }
     });
@@ -118,28 +122,32 @@ class _ComparisonPageState extends State<ComparisonPage>
   }
 
   // 2. UPDATED Search function to use one of the predefined keywords
-  Future<void> _searchRetailerProduct(String retailerId, {bool isInitialLoad = false}) async {
-    
+  Future<void> _searchRetailerProduct(
+    String retailerId, {
+    bool isInitialLoad = false,
+  }) async {
     // --- UPDATED KEYWORD EXTRACTION LOGIC ---
     String searchName = widget.product.name;
     String? finalSearchTerm;
-    
+
     // 1. Check if the product name contains any of the defined keywords.
     final originalNameLower = searchName.toLowerCase();
     for (var keyword in _PRODUCT_KEYWORDS) {
       if (originalNameLower.contains(keyword)) {
         finalSearchTerm = keyword;
         debugPrint('[Search Debug] Found matching keyword: $finalSearchTerm');
-        break; 
+        break;
       }
     }
-    
+
     // 2. If no keyword is found, fall back to the broad search (first three words)
     if (finalSearchTerm == null) {
       final words = searchName.split(' ');
       if (words.length > 3) {
         finalSearchTerm = words.sublist(0, 3).join(' ');
-        debugPrint('[Search Debug] Falling back to broad search: $finalSearchTerm');
+        debugPrint(
+          '[Search Debug] Falling back to broad search: $finalSearchTerm',
+        );
       } else {
         finalSearchTerm = searchName;
         debugPrint('[Search Debug] Searching with full name: $finalSearchTerm');
@@ -147,9 +155,11 @@ class _ComparisonPageState extends State<ComparisonPage>
     }
     searchName = finalSearchTerm;
     // ----------------------------------------
-    
-    debugPrint('[ComparisonPage] Searching for product in retailer: $retailerId (Initial Load: $isInitialLoad)');
-    
+
+    debugPrint(
+      '[ComparisonPage] Searching for product in retailer: $retailerId (Initial Load: $isInitialLoad)',
+    );
+
     try {
       // Use the new determined searchName
       final searchResults = await ApiService.searchProductsByNameAndRetailer(
@@ -157,12 +167,14 @@ class _ComparisonPageState extends State<ComparisonPage>
         retailerName: retailerId,
       );
 
-      final retailerResults = searchResults.where((item) => item is Map<String, dynamic>).toList();
-      
+      final retailerResults = searchResults
+          .where((item) => item is Map<String, dynamic>)
+          .toList();
+
       if (retailerResults.isNotEmpty) {
         final item = retailerResults.first;
         final price = _parsePrice(item['price']);
-        
+
         // Prepare the new product objects
         final newRetailerPrice = RetailerPrice(
           retailerId: retailerId,
@@ -188,31 +200,34 @@ class _ComparisonPageState extends State<ComparisonPage>
             _prices.add(newRetailerPrice);
             _retailerProducts[retailerId] = newProduct;
           });
-          debugPrint('[ComparisonPage] Price loaded (Chip Click): ${newRetailerPrice.retailerName} - R${newRetailerPrice.price}');
+          debugPrint(
+            '[ComparisonPage] Price loaded (Chip Click): ${newRetailerPrice.retailerName} - R${newRetailerPrice.price}',
+          );
         } else {
-           // During initial load, just update the data structures
-           _prices.removeWhere((p) => p.retailerId == retailerId);
-           _prices.add(newRetailerPrice);
-           _retailerProducts[retailerId] = newProduct;
-           debugPrint('[ComparisonPage] Price loaded (Initial): ${newRetailerPrice.retailerName} - R${newRetailerPrice.price}');
+          // During initial load, just update the data structures
+          _prices.removeWhere((p) => p.retailerId == retailerId);
+          _prices.add(newRetailerPrice);
+          _retailerProducts[retailerId] = newProduct;
+          debugPrint(
+            '[ComparisonPage] Price loaded (Initial): ${newRetailerPrice.retailerName} - R${newRetailerPrice.price}',
+          );
         }
-        
       } else {
         debugPrint('[ComparisonPage] No product found for $retailerId');
         // Clear old entry if no product is found for this retailer upon search
         if (!isInitialLoad) {
-           setState(() {
-             _prices.removeWhere((p) => p.retailerId == retailerId);
-             _retailerProducts.remove(retailerId);
-           });
-           if(mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(
-                 content: Text('No similar product found at $retailerId'),
-                 backgroundColor: Colors.orange,
-               ),
-             );
-           }
+          setState(() {
+            _prices.removeWhere((p) => p.retailerId == retailerId);
+            _retailerProducts.remove(retailerId);
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('No similar product found at $retailerId'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -263,8 +278,7 @@ class _ComparisonPageState extends State<ComparisonPage>
       return FilterChip(
         label: Text(name),
         selected: sel,
-        backgroundColor:
-            isInitialRetailer ? const Color(0xFFEFF6FF) : null,
+        backgroundColor: isInitialRetailer ? const Color(0xFFEFF6FF) : null,
         selectedColor: isInitialRetailer ? const Color(0xFF2563EB) : null,
         onSelected: (v) async {
           setState(() {
@@ -274,7 +288,7 @@ class _ComparisonPageState extends State<ComparisonPage>
               selectedRetailers.remove(id);
             }
           });
-          
+
           // Only trigger a new product search if the chip is selected (v == true)
           // AND we don't already have the product data cached for this retailer.
           if (v && !_retailerProducts.containsKey(id)) {
@@ -284,7 +298,6 @@ class _ComparisonPageState extends State<ComparisonPage>
       );
     }).toList();
   }
-
 
   double? getBestPrice() {
     final prices = _prices
@@ -357,14 +370,10 @@ class _ComparisonPageState extends State<ComparisonPage>
   Widget _buildProductImage({double size = 120, Product? product}) {
     final productToDisplay = product ?? widget.product;
     final img = productToDisplay.image;
-    
+
     if (img.isEmpty) {
       return const Center(
-        child: Icon(
-          Icons.shopping_bag,
-          size: 40,
-          color: Colors.grey,
-        ),
+        child: Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
       );
     }
 
@@ -374,11 +383,7 @@ class _ComparisonPageState extends State<ComparisonPage>
         img,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => const Center(
-          child: Icon(
-            Icons.shopping_bag,
-            size: 40,
-            color: Colors.grey,
-          ),
+          child: Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
         ),
       );
     }
@@ -388,11 +393,7 @@ class _ComparisonPageState extends State<ComparisonPage>
       img,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => const Center(
-        child: Icon(
-          Icons.shopping_bag,
-          size: 40,
-          color: Colors.grey,
-        ),
+        child: Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
       ),
     );
   }
@@ -402,13 +403,13 @@ class _ComparisonPageState extends State<ComparisonPage>
     final filteredPrices = _getFilteredPrices();
     final best = getBestPrice();
 
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Compare'),
-          leading: BackButton(onPressed: () => Navigator.pop(context)),
-        ),
-        body: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Compare'),
+        leading: BackButton(onPressed: () => Navigator.pop(context)),
+      ),
+      body: SafeArea(
+        child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
@@ -441,7 +442,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                 ],
               ),
               const SizedBox(height: 8),
-              // Only show product card when loading or when retailers are selected
               if (_loading)
                 _buildProductPlaceholder()
               else if (selectedRetailers.isNotEmpty)
@@ -452,10 +452,7 @@ class _ComparisonPageState extends State<ComparisonPage>
                 alignment: Alignment.centerLeft,
                 child: _loading
                     ? _buildFilterChipsPlaceholder()
-                    : Wrap(
-                        spacing: 8,
-                        children: _buildRetailerChips(),
-                      ),
+                    : Wrap(spacing: 8, children: _buildRetailerChips()),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -497,7 +494,6 @@ class _ComparisonPageState extends State<ComparisonPage>
                         itemCount: filteredPrices.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, idx) {
-                          // Sort list so best price is first
                           final sortedList = List<RetailerPrice>.from(
                             filteredPrices,
                           );
@@ -530,13 +526,13 @@ class _ComparisonPageState extends State<ComparisonPage>
 
     // Handle case where filteredPrices might be empty or only contain null prices
     if (filteredPrices.isEmpty) {
-        // Fallback to displaying the original product details if no retailer data is available
-        return _buildProductPlaceholder(); 
+      // Fallback to displaying the original product details if no retailer data is available
+      return _buildProductPlaceholder();
     }
 
     // Determine which retailer to display
     RetailerPrice displayRetailerPrice;
-    
+
     if (selectedRetailers.length == 1) {
       // Single retailer selected - show that one
       final selectedRetailerId = selectedRetailers.first;
@@ -551,14 +547,21 @@ class _ComparisonPageState extends State<ComparisonPage>
         (p) => p.price != null && p.price == bestPrice,
         orElse: () => filteredPrices.firstWhere(
           (p) => selectedRetailers.contains(p.retailerId),
-          orElse: () => _prices.isNotEmpty ? _prices.first : RetailerPrice(retailerId: 'N/A', retailerName: 'N/A', price: null, productUrl: null),
+          orElse: () => _prices.isNotEmpty
+              ? _prices.first
+              : RetailerPrice(
+                  retailerId: 'N/A',
+                  retailerName: 'N/A',
+                  price: null,
+                  productUrl: null,
+                ),
         ),
       );
     }
 
     final bestRetailerName = _getRetailerName(displayRetailerPrice.retailerId);
     final bestRetailerId = displayRetailerPrice.retailerId;
-    
+
     // Get the product from this retailer (or use original if not found)
     final displayProduct = _retailerProducts[bestRetailerId] ?? widget.product;
 
@@ -640,7 +643,9 @@ class _ComparisonPageState extends State<ComparisonPage>
                     ? 'R ${displayRetailerPrice.price!.toStringAsFixed(2)}'
                     : 'Price not available',
                 style: TextStyle(
-                  color: displayRetailerPrice.price != null ? const Color(0xFF2563EB) : Colors.grey,
+                  color: displayRetailerPrice.price != null
+                      ? const Color(0xFF2563EB)
+                      : Colors.grey,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Inter',
@@ -663,9 +668,10 @@ class _ComparisonPageState extends State<ComparisonPage>
                       child: InkWell(
                         onTap: displayRetailerPrice.price != null
                             ? () => _launchRetailerWebsite(
-                                  bestRetailerId,
-                                  productUrl: displayRetailerPrice.productUrl ?? '',
-                                )
+                                bestRetailerId,
+                                productUrl:
+                                    displayRetailerPrice.productUrl ?? '',
+                              )
                             : null,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
@@ -695,8 +701,8 @@ class _ComparisonPageState extends State<ComparisonPage>
         ),
 
         // Lowest Price Badge - Top Right Corner (only if this retailer has the best price)
-        if (displayRetailerPrice.price != null && 
-            bestPrice != null && 
+        if (displayRetailerPrice.price != null &&
+            bestPrice != null &&
             (displayRetailerPrice.price! - bestPrice).abs() < 0.001)
           Positioned(
             top: 12,
@@ -909,7 +915,7 @@ class _ComparisonPageState extends State<ComparisonPage>
   Widget _buildRetailerCard(RetailerPrice price, bool isBest) {
     // Get retailer name - use the stored retailer name directly
     final String retailerName = _getRetailerName(price.retailerId);
-    
+
     // Get the product data for this retailer
     final retailerProduct = _retailerProducts[price.retailerId];
 

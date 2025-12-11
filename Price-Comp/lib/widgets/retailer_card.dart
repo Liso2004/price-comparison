@@ -17,7 +17,7 @@ class RetailerCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(child: Text(price.retailerName[0])),
+          CircleAvatar(child: Text(price.retailerName[0])), 
           const SizedBox(width: 12),
           Expanded(
             child: Text(

@@ -150,7 +150,7 @@ class _SplashPageState extends State<SplashPage>
       animation: _controller,
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: _backgroundColor.value,
+          backgroundColor: Colors.white,
           body: Stack(
             children: [
               Container(
@@ -158,7 +158,7 @@ class _SplashPageState extends State<SplashPage>
                   gradient: RadialGradient(
                     radius: 1.6,
                     colors: [
-                      Colors.blue.shade900.withOpacity(0.85),
+                      const Color.fromARGB(255, 255, 255, 255).withOpacity(0.85),
                       Colors.black.withOpacity(0.95),
                     ],
                   ),
@@ -178,7 +178,7 @@ class _SplashPageState extends State<SplashPage>
                           gradient: const LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Color(0xFF2A7FDB), Color(0xFF0047B3)],
+                            colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -226,9 +226,9 @@ class _SplashPageState extends State<SplashPage>
                                     child: Text(
                                       _displayText,
                                       style: TextStyle(
-                                        fontSize: 36,
+                                        fontSize: 46,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: const Color.fromARGB(255, 57, 100, 149),
                                         letterSpacing:
                                             _displayText == "ShopWise"
                                             ? _letterSpacing.value

@@ -36,51 +36,50 @@ class _LegalPageState extends State<LegalPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                '''The information provided by SmartBasket we , us or our on our mobile application is for general informational purposes only. All information on our mobile application is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on our mobile application. UNDER NO CIRCUMSTANCE SHALL WE HAVE ANY LIABILITY TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF OUR MOBILE APPLICATION OR RELIANCE ON ANY INFORMATION PROVIDED ON OUR MOBILE APPLICATION. YOUR USE OF OUR MOBILE APPLICATION AND YOUR RELIANCE ON ANY INFORMATION ON OUR MOBILE APPLICATION IS SOLELY AT YOUR OWN RISK.
+                '''Disclaimer: ShopWise we, us, or our mobile application's content is only intended for general informational reasons. We provide all of the information on our mobile application in good faith, but we make no express or implied representations or warranties about its correctness, sufficiency, validity, dependability, availability, or completeness. Under no circumstances will we be liable to you for any loss or damage of any kind that results from using our mobile application or relying on any information it provides. It is entirely your responsibility to use our mobile application and to rely on any information found on it.
 ''',
               ),
-                            const Text(
+              const Text(
                 'EXTERNAL LINKS DISCLAIMER ',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 8),
               const Text(
-                '''Our mobile application may contain (or you may be sent through our mobile application) links to other websites or content belonging to or originating from third parties or links to websites and features in banners or other advertising. Such external links are not investigated, monitored, or checked for accuracy, adequacy, validity, reliability, availability, or completeness by us. WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR THE ACCURACY OR RELIABILITY OF ANY INFORMATION OFFERED BY THIRD PARTY WEBSITES LINKED THROUGH THE SITE OR ANY WEBSITE OR FEATURE LINKED IN ANY BANNER OR OTHER ADVERTISING. WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES.
+                '''External Links Disclaimer: Our mobile application may include (or send you through it) links to other websites or information that is owned by or originates from third parties, as well as links to websites and features in banners or other forms of advertising. We do not investiage, monitor, or verify these external links for correctness, sufficiency, validity, dependability, accessibility, or completeness. The accuracy and dependability of any information provided by third-party websites linked through the website, as well as any website or feature included in any banner or other advertising, are not warranted, endorsed, guaranteed, or assumed by us. We will not monitor any transactions between you and third-party suppliers of goods or services, nor will we be involved in any way.
 ''',
               ),
-                            const Text(
-                'Cybercrimes Act',
+              const Text(
+                'Cybercrime Act:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 8),
               const Text(
-                '''This application's data acquisition methodology is strictly designed to operate within the technical parameters established by the target retail websites, specifically adhering to the robots.txt protocol. This includes:
-Strict observation of all Disallow directives.
-Honouring all Crawl-Delay directives, including the 10-second minimum delay established by Pick n Pay.
-Operating solely on public-facing URL paths and never attempting to access restricted areas (e.g., user accounts, checkout, or login interfaces).
-''',
+                '''This application's data collecting methodology is rigorously designed to work inside the technological parameters established by the target retail websites, notably the robots.txt protocol. This includes:
+Strict adherence to all Disallow orders.
+Honoring all Crawl-Delay directives, including Pick n Pay's 10-second minimum delay.
+Operating only on public-facing URL pathways and never attempting to access privileged regions (such as user accounts, checkout, or login interfaces).''',
               ),
-                            const Text(
-                'Data Scope Limitation',
+              const Text(
+                'Data scope limitation:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 8),
               const Text(
-                '''All data retrieved by this application is limited to public, factual information necessary for price comparison:
-Factual Data Only: Extraction is restricted to product names, current prices, and stock indicators, in line with Intellectual Property clauses. Graphical assets, extensive text descriptions, and branding are excluded from the dataset.
-POPIA Compliance: The system is engineered to categorically avoid the collection, storage, or processing of any Personal Identifiable Information (PII), ensuring full compliance with the Protection of Personal Information Act (POPIA).
-''',
+                ''' All data retrieved by this application is confined to public, factual information required for pricing comparison.
+Factual Data Only: Extraction is limited to product names, current prices, and stock indicators, in accordance with Intellectual Property restrictions. The dataset excludes graphic assets, detailed language descriptions, and branding.
+POPIA Compliance: The system is designed to completely avoid collecting, storing, or processing any personally identifiable information (PII), assuring full compliance with the Protection of Personal Information Act (POPIA).''',
               ),
-                            const Text(
-                'Data Accuracy and Liability Disclaimer',
+              const Text(
+                'Data Accuracy and Liability Disclaimer:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 8),
               const Text(
-                '''The pricing data presented is a snapshot derived from a specific, compliant scrape window. Users acknowledge the following limitations:
-Non-Real-Time Data: Prices, availability, and promotional details may change on the retailer's site between scraping cycles. The application does not provide real-time data.
-Verification Required: Users are solely responsible for verifying the accuracy and currency of all pricing and product information directly on the respective retailer's official platform prior to purchase.
-No Warranties: The application provides its data "as is" and disclaims all liability for any purchasing decisions, financial loss, or contractual issues arising from the use of its data.''',
+                ''' The pricing information shown is a snapshot obtained from a specified, compliant scrape window. Users understand the following limitations:
+Non-Real Time Data: Prices, availability, and promotional information may change on the retailer's website between scraping rounds. The app does not provide real-time information.
+Verification Required: Users are completely responsible for validating the accuracy and currency of all price and product information directly on the respective retailer's official platform before making a purchase.
+No warranties: The program delivers its data in its current form and expressly disclaims any obligation for any purchasing decisions, financial loss, or contractual issues resulting from its use.
+''',
               ),
               const SizedBox(height: 20),
               ElevatedButton(
