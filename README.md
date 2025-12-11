@@ -1,178 +1,56 @@
-🛒 Price Comparison App
+# Shopwise
 
-The Price Comparison App allows users to search, compare, and analyze product prices across major South African retailers.
-This repository contains the Flutter frontend, Node.js/Python backend, scraper pipeline, documentation, and infrastructure for the full end-to-end system.
+A product price comparison app for four major South African retailers.
+Built with Flutter (frontend), Python FastAPI (backend), and MongoDB (database).
 
-📱 Frontend (Flutter)
+## Overview
 
-Features:
+This app lets users compare product prices across multiple South African stores.
+It includes four main pages:
 
-Home page
+### Home Page
+- Search bar
+- Quick search shortcuts
+- Category cards that link to search results
 
-Search functionality
+### Search Page
+- Search bar
+- Filters
+- "No result" error state
+- Recommended product cards
+- Displays product cards when a search is done
 
-Compare page
+### Compare Page
+- Shows side-by-side comparison of product prices from all retailers
 
-Product results
+### Settings Page
+- About
+- Legal information
 
-Location:
-/frontend
+## Installation
 
-🔧 Backend (Python)
-FastAPI/ python API
+1. Clone git repo
+```bash
+git clone https://github.com/Liso2004/price-comparison.git
+```
 
-Handles:
+2. Create a virtual environment
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
 
-Product search
-
-Price comparison logic
-
-Retailer endpoints
-
-API integration layer
-
-Python Scraper
-
-Retailer web scraping
-
-Data cleaning + transformation
-
-Safe scraping respecting robots.txt
-
-ETL pipeline
-
-Location:
-/backend
-
-📚 Documentation (/docs)
-
-Includes:
-
-Legal compliance (T&Cs, robots.txt audit)
-
-Wireframes
-
-User flows
-
-Architecture diagrams
-
-API specs
-
-Sprint plans
-
-Technical design docs
-
-Location:
-/docs
-
-🏗 Infrastructure (/infrastructure)
-
-GitHub Actions CI/CD
-
-
-Location:
-/infrastructure
-
-Tech Stack
-Frontend
-
-Flutter (Dart)
-
-Backend
-
-FastAPI (python)
-
-Python (Scraping engine)
-
-MongoDB
-
-Infrastructure
-
-GitHub + GitHub Actions
-
-
-CI/CD pipelines
-
-Documentation
-Slack board
-
-Getting Started
-Clone the repository
-git clone
-cd price-comparison
-
-Install Dependencies
-Frontend
-cd frontend
-flutter pub get
-
-Scraper (Python)
-cd backend/scraper
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-Running the Project
-Start Flutter App
+4. Run backend
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+5. Run frontend
+```bash
 flutter run
-
-Start Node.js API
-cd backend
-npm run dev
-
-Run Python Scraper
-cd backend/scraper
-python main.py
-
- Git Workflow
-
-We use a structured branching model:
-
-Main Branches
-
-main → production
-
-dev → integration/test
-
-feature/<ticket-name> → new features
-
-bugfix/<ticket-name> → fixes
-
-Rules
-
-No direct pushes to main
-
-All work must go through PR → dev
-
-Sprint release = PR from dev → main
-
-Legal Compliance
-
-Project includes:
-
-Terms & Conditions analysis
-
-robots.txt restrictions
-
-Ethical scraping guidelines
-
-Final legal summary
-
-See:
-/docs/legal
-
-📜 License
-
-MIT License — or replace with your license of choice.
-
-🤝 Contributing
-
-Create a feature branch
-
-Commit changes
-
-Push to remote
-
-Open a Pull Request
-
-Request review
-
-Merge into main 
+```
