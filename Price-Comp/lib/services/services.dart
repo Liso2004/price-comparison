@@ -4,7 +4,7 @@ import 'dart:convert';
 class ApiService {
   // API Configuration
   static const String baseUrl =
-      'http://192.168.3.170:8000'; // Change this to your API server URL
+      'http://192.168.0.140:8000'; // Change this to your API server URL AKA your devices ip adress
   static const String productsEndpoint = '/products';
   static const String categoriesEndpoint = '/categories';
   static const String retailersEndpoint = '/retailers';

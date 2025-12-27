@@ -3,7 +3,8 @@ import '../pages/home_page.dart';
 import '../pages/search_page.dart';
 import '../pages/compare_placeholder_page.dart';
 import '../pages/settings_page.dart';
-//comment
+import '../pages/bulk_list_page.dart';
+
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
   @override
@@ -13,6 +14,7 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
   String _searchInitialQuery = '';
+  
   @override
   void initState() {
     super.initState();
@@ -26,6 +28,14 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   void _onTap(int idx) => setState(() => _currentIndex = idx);
+  
+  void _navigateToBulkList() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BulkListPage()),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     // Recreate pages here so we can pass a dynamic initial query
@@ -37,8 +47,10 @@ class _MainScaffoldState extends State<MainScaffold> {
             _currentIndex = 1;
           });
         },
+        onNavigateToBulkList: _navigateToBulkList,
       ),
       SearchPage(initialQuery: _searchInitialQuery),
+      const BulkListPage(),
       ComparePlaceholderPage(
         onHomePressed: () {
           debugPrint(
@@ -47,7 +59,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           setState(() => _currentIndex = 0);
         },
       ),
-      SettingsPage(),
+      const SettingsPage(),
     ];
 
     return Scaffold(
@@ -59,6 +71,10 @@ class _MainScaffoldState extends State<MainScaffold> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_basket),
+            label: 'Bulk List',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.compare_arrows),
             label: 'Compare',
