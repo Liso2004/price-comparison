@@ -3,11 +3,18 @@ import '../widgets/category_card.dart';
 import '../services/services.dart';
 import 'search_page.dart';
 import 'legal_page.dart';
+import 'bulk_list_page.dart';
 
 class HomePage extends StatefulWidget {
   final void Function(String)? onNavigateToSearch;
-  const HomePage({super.key, this.onNavigateToSearch});
-
+  final VoidCallback? onNavigateToBulkList;  // ADD THIS LINE
+  
+  const HomePage({
+    super.key, 
+    this.onNavigateToSearch,
+    this.onNavigateToBulkList,  // ADD THIS LINE
+  });
+  
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -249,7 +256,91 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+               const SizedBox(height: 20),
+
+// ------------------------ BULK SHOPPING LIST ------------------------
+GestureDetector(
+  onTap: () {
+    if (widget.onNavigateToBulkList != null) {
+      widget.onNavigateToBulkList!();
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const BulkListPage()),
+      );
+    }
+  },
+  child: Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF2563EB).withOpacity(0.3),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.shopping_basket,
+            color: Colors.white,
+            size: 32,
+          ),
+        ),
+        const SizedBox(width: 16),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bulk Shopping List',
+                style: TextStyle(
+                  fontFamily: "Inter",
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Compare prices across all retailers • AI-powered recommendations',
+                style: TextStyle(
+                  fontFamily: "Inter",
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Icon(
+          Icons.arrow_forward_ios,
+          color: Colors.white,
+          size: 20,
+        ),
+      ],
+    ),
+  ),
+),
+
+const SizedBox(height: 24),
+
+
 
                 // ------------------------ QUICK SEARCH ------------------------
                 const Text(

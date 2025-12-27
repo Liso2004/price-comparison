@@ -118,7 +118,7 @@ async def fetch_image_from_url(url: str) -> Optional[bytes]:
         print(f"⚠️ Failed to fetch image from {url}: {e}")
     return None
 
-def add_image_proxy_url(product: dict, base_url: str = "http://192.168.3.170:8000") -> dict:
+def add_image_proxy_url(product: dict, base_url: str = "http://192.168.0.140:8000") -> dict: #add your laptop url here or else backend wont work due to some andrior emulator stuff 
     """Replace productImageURL with proxy URL if image exists."""
     if product.get("productImageURL"):
         encoded_url = quote(product["productImageURL"], safe="")
